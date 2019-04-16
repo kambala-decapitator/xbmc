@@ -333,7 +333,7 @@ case $host in
           else
             AC_MSG_ERROR(error in configure of --with-cpu=$use_cpu)
           fi
-          
+
           found_sdk_version=[`$use_xcodebuild -showsdks | sed -E -n 's/.*'"$target_platform"'([0-9]+)\.([0-9]+)/\1.\2/p' | sort  -n -t. -k1,1 -k2,2 | tail -n 1`]
           use_sdk="${use_sdk:-$found_sdk_version}"
           platform_cflags+=" -fembed-bitcode"
@@ -442,6 +442,9 @@ case $use_platform in
      platform_ldflags="-lpthread"
      ;;
   tvos)
+    if test "$platform_os" != "tvos"; then
+      AC_MSG_ERROR([$use_platform is only supported on the tvos platform])
+    fi
     ;;
   auto)
     ;;
