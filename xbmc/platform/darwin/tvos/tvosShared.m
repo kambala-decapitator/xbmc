@@ -50,6 +50,7 @@
   static int ret = -1;
   if (ret == -1)
   {
+    // @todo refactor getting app's bundle into a separate method, then also modify +getSharedID
     NSBundle *bundle = [NSBundle mainBundle];
     if ([[bundle.bundleURL pathExtension] isEqualToString:@"appex"]) { // We're in a extension
       // Peel off two directory levels - Kodi.app/PlugIns/MY_APP_EXTENSION.appex

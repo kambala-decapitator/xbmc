@@ -7,17 +7,17 @@
 	<key>CFBundleDisplayName</key>
 	<string>TopShelf</string>
 	<key>CFBundleExecutable</key>
-	<string>$(EXECUTABLE_NAME)</string>
+	<string>@TOPSHELF_EXTENSION_NAME@</string>
 	<key>CFBundleIdentifier</key>
-	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<string>@PLATFORM_BUNDLE_IDENTIFIER@.topshelf</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>$(PRODUCT_NAME)</string>
+	<string>TopShelf</string>
 	<key>CFBundlePackageType</key>
 	<string>XPC!</string>
 	<key>CFBundleShortVersionString</key>
-	<string>@APP_VERSION_MAJOR@.@APP_VERSION_MINOR@.@APP_VERSION_TAG_LC@</string>
+	<string>@APP_VERSION@</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>

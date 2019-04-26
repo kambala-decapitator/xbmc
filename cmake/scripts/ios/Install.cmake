@@ -1,7 +1,5 @@
 # IOS/TVOS packaging
 if(CORE_PLATFORM_NAME_LC STREQUAL tvos)
-  # TVOS packaging
-
   # asset catalog
   set(ASSET_CATALOG "${CMAKE_SOURCE_DIR}/xbmc/platform/darwin/tvos/Assets.xcassets")
   execute_process(COMMAND ${CMAKE_SOURCE_DIR}/tools/darwin/Support/GenerateMissingImages-tvos.py "${ASSET_CATALOG}")
@@ -63,6 +61,10 @@ set(CODE_SIGN_IDENTITY "" CACHE STRING "Code Sign Identity")
 if(CODE_SIGN_IDENTITY)
   set_target_properties(${APP_NAME_LC} PROPERTIES XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED TRUE
                                                   XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY ${CODE_SIGN_IDENTITY})
+  if(TOPSHELF_EXTENSION_NAME)
+    set_target_properties(${TOPSHELF_EXTENSION_NAME} PROPERTIES XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED TRUE
+                                                                XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY ${CODE_SIGN_IDENTITY})
+  endif()
 endif()
 
 add_custom_command(TARGET ${APP_NAME_LC} POST_BUILD
@@ -99,6 +101,14 @@ add_custom_command(TARGET ${APP_NAME_LC} POST_BUILD
             "CURRENT_ARCH=${ARCH}"
             ${CMAKE_SOURCE_DIR}/tools/darwin/Support/Codesign.command
 )
+
+if(TOPSHELF_EXTENSION_NAME)
+  # copy extension inside PlugIns dir of the app bundle
+  add_custom_command(TARGET ${APP_NAME_LC} POST_BUILD
+      COMMAND ${CMAKE_COMMAND} ARGS -E copy_directory $<TARGET_BUNDLE_DIR:${TOPSHELF_EXTENSION_NAME}>
+                                                      $<TARGET_BUNDLE_DIR:${APP_NAME_LC}>/PlugIns/${TOPSHELF_EXTENSION_NAME}.${TOPSHELF_BUNDLE_EXTENSION}
+                                                      MAIN_DEPENDENCY ${TOPSHELF_EXTENSION_NAME})
+endif()
 
 set(DEPENDS_ROOT_FOR_XCODE ${NATIVEPREFIX}/..)
 configure_file(${CMAKE_SOURCE_DIR}/tools/darwin/packaging/ios/mkdeb-ios.sh.in

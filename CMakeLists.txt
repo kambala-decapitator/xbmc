@@ -348,6 +348,7 @@ if(WIN32)
 elseif(CORE_SYSTEM_NAME STREQUAL android)
   # Nothing
 elseif(CORE_SYSTEM_NAME STREQUAL ios)
+  set(PLATFORM_BUNDLE_IDENTIFIER "${APP_PACKAGE}-${CORE_PLATFORM_NAME_LC}")
   set_target_properties(${APP_NAME_LC} PROPERTIES OUTPUT_NAME ${APP_NAME}
                                                   MACOSX_BUNDLE_INFO_PLIST ${PLATFORM_BUNDLE_INFO_PLIST})
 else()
