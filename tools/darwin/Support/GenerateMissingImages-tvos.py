@@ -4,7 +4,7 @@ import sys, os, json
 from subprocess import call
 
 assetCatalogPath = sys.argv[1]
-brandAssetsDir = 'Brand Assets.brandassets'
+brandAssetsDir = sys.argv[2] + '.brandassets'
 
 def generateImage(contentsRelativeDir, isBaseImage1x, newWidth, newHeight):
     contentsDir = os.path.join(assetCatalogPath, contentsRelativeDir)
@@ -21,9 +21,9 @@ def generateImage(contentsRelativeDir, isBaseImage1x, newWidth, newHeight):
         call(['sips', '--resampleHeightWidth', str(newHeight), str(newWidth), existingImagePath, '--out', os.path.join(contentsDir, jsonContents['images'][newImageIndex]['filename'])])
 
 
-generateImage('LaunchImage.launchimage', True, 3840, 2160)
-generateImage(os.path.join(brandAssetsDir, 'Top Shelf Image.imageset'), True, 3840, 1440)
+generateImage(sys.argv[3] + '.launchimage', True, 3840, 2160)
+generateImage(os.path.join(brandAssetsDir, 'topshelf.imageset'), True, 3840, 1440)
 
-appIconSmall = os.path.join(brandAssetsDir, 'App Icon - Small.imagestack')
+appIconSmall = os.path.join(brandAssetsDir, 'icon.imagestack')
 for i in xrange(1, 5):
-    generateImage(os.path.join(appIconSmall, 'Layer {}.imagestacklayer'.format(i), 'Content.imageset'), False, 400, 240)
+    generateImage(os.path.join(appIconSmall, 'Layer{}.imagestacklayer'.format(i), 'Content.imageset'), False, 400, 240)

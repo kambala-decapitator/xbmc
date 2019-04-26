@@ -3,25 +3,25 @@
     {
       "size" : "1280x768",
       "idiom" : "tv",
-      "filename" : "App Icon - App Store.imagestack",
+      "filename" : "icon_appstore.imagestack",
       "role" : "primary-app-icon"
     },
     {
       "size" : "400x240",
       "idiom" : "tv",
-      "filename" : "App Icon - Small.imagestack",
+      "filename" : "icon.imagestack",
       "role" : "primary-app-icon"
     },
     {
       "size" : "2320x720",
       "idiom" : "tv",
-      "filename" : "Top Shelf Image Wide.imageset",
+      "filename" : "topshelf_wide.imageset",
       "role" : "top-shelf-image-wide"
     },
     {
       "size" : "1920x720",
       "idiom" : "tv",
-      "filename" : "Top Shelf Image.imageset",
+      "filename" : "topshelf.imageset",
       "role" : "top-shelf-image"
     }
   ],
