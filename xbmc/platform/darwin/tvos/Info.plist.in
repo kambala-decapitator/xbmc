@@ -7,7 +7,7 @@
 	<key>CFBundleDisplayName</key>
 	<string>@APP_NAME@</string>
 	<key>CFBundleExecutable</key>
-	<string>@APP_NAME_LC@</string>
+	<string>@APP_NAME@</string>
 	<key>CFBundleIdentifier</key>
 	<string>@PLATFORM_BUNDLE_IDENTIFIER@</string>
 	<key>CFBundleInfoDictionaryVersion</key>
