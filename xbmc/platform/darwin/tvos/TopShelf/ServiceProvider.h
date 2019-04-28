@@ -22,7 +22,4 @@
 #import <TVServices/TVServices.h>
 
 @interface ServiceProvider : NSObject <TVTopShelfProvider>
-
-
 @end
-
