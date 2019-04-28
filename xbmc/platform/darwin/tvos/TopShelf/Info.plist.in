@@ -21,7 +21,7 @@
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
-	<string>r####</string>
+	<string>@APP_SCMID@</string>
 	<key>NSExtension</key>
 	<dict>
 		<key>NSExtensionAttributes</key>
