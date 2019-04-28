@@ -4,7 +4,10 @@ if(CORE_PLATFORM_NAME_LC STREQUAL tvos)
   set(ASSET_CATALOG "${CMAKE_SOURCE_DIR}/xbmc/platform/darwin/tvos/Assets.xcassets")
   set(ASSET_CATALOG_ASSETS Assets)
   set(ASSET_CATALOG_LAUNCH_IMAGE LaunchImage)
+  
+  message("generating missing asset catalog images...")
   execute_process(COMMAND ${CMAKE_SOURCE_DIR}/tools/darwin/Support/GenerateMissingImages-tvos.py "${ASSET_CATALOG}" ${ASSET_CATALOG_ASSETS} ${ASSET_CATALOG_LAUNCH_IMAGE})
+  
   target_sources(${APP_NAME_LC} PRIVATE "${ASSET_CATALOG}")
   set_source_files_properties("${ASSET_CATALOG}" PROPERTIES MACOSX_PACKAGE_LOCATION "Resources") # adds to Copy Bundle Resources build phase
 

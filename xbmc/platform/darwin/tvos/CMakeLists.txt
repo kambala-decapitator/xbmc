@@ -1,3 +1,5 @@
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/tvosShared.m.in ${CMAKE_CURRENT_SOURCE_DIR}/tvosShared.m @ONLY)
+
 set(SOURCES
 			MainController.mm
 			MainEAGLView.mm
@@ -5,7 +7,7 @@ set(SOURCES
 			MainKeyboardView.mm
 			TVOSSettingsHandler.mm
 			TVOSTopShelf.mm
-			tvosShared.m)
+			${CMAKE_CURRENT_SOURCE_DIR}/tvosShared.m)
 
 set(HEADERS
 			MainApplication.h
