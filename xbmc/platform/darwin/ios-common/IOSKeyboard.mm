@@ -9,8 +9,14 @@
 #include "platform/darwin/ios-common/IOSKeyboard.h"
 
 #include "platform/darwin/NSLogDebugHelpers.h"
+#include "platform/darwin/ios-common/IOSKeyboard.h"
 #include "platform/darwin/ios-common/IOSKeyboardView.h"
-#include "platform/darwin/ios/XBMCController.h"
+
+#if defined(TARGET_DARWIN_IOS)
+  #include "platform/darwin/ios/XBMCController.h"
+#elif defined(TARGET_DARWIN_TVOS)
+  #include "platform/darwin/tvos/MainController.h"
+#endif
 
 class CIOSKeyboardImpl
 {
@@ -38,12 +44,7 @@ bool CIOSKeyboard::ShowAndGetInput(char_callback_t pCallback, const std::string 
         return false;
 
       // assume we are only drawn on the mainscreen ever!
-      UIScreen* pCurrentScreen = [UIScreen mainScreen];
-      CGRect keyboardFrame =
-          CGRectMake(0, 0, pCurrentScreen.bounds.size.width, pCurrentScreen.bounds.size.height);
-
-      //create the keyboardview
-      m_impl->g_pIosKeyboard = [[KeyboardView alloc] initWithFrame:keyboardFrame];
+      m_impl->g_pIosKeyboard = [[KeyboardView alloc] initWithFrame:UIScreen.mainScreen.bounds];
       if (!m_impl->g_pIosKeyboard)
         return false;
 
