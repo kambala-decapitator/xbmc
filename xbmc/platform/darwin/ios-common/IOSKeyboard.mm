@@ -44,7 +44,15 @@ bool CIOSKeyboard::ShowAndGetInput(char_callback_t pCallback, const std::string 
         return false;
 
       // assume we are only drawn on the mainscreen ever!
-      m_impl->g_pIosKeyboard = [[KeyboardView alloc] initWithFrame:UIScreen.mainScreen.bounds];
+      auto screenSize = [UIScreen mainScreen].bounds.size;
+#if defined(TARGET_DARWIN_IOS)
+      CGRect keyboardFrame = CGRectMake(0, 0, screenSize.width, screenSize.height);
+#elif defined(TARGET_DARWIN_TVOS)
+      CGRect keyboardFrame = CGRectMake(0, 0, screenSize.height, screenSize.width);
+#endif
+
+      // create the keyboardview
+      m_impl->g_pIosKeyboard = [[KeyboardView alloc] initWithFrame:keyboardFrame];
       if (!m_impl->g_pIosKeyboard)
         return false;
 
