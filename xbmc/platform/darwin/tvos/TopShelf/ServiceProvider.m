@@ -38,7 +38,7 @@
 
   NSString *sharedID = [tvosShared getSharedID];
   NSUserDefaults *shared = [[NSUserDefaults alloc] initWithSuiteName:sharedID];
-  NSMutableArray *topShelfItems = [[NSMutableArray alloc] init];
+  NSMutableArray *topShelfItems = [[NSMutableArray alloc] initWithCapacity:2];
   TVContentIdentifier *wrapperIdentifier = [[TVContentIdentifier alloc] initWithIdentifier:@"shelf-wrapper" container:nil];
 
   NSArray *movieArray = nil;
@@ -79,7 +79,7 @@
     }
     return [contentItems autorelease];
   };
-  
+
   if ([movieArray count] > 0)
   {
     TVContentItem *itemMovie = [[TVContentItem alloc] initWithContentIdentifier:wrapperIdentifier];
@@ -100,7 +100,7 @@
 
   [wrapperIdentifier release];
   [shared release];
-  
+
   return [topShelfItems autorelease];
 }
 

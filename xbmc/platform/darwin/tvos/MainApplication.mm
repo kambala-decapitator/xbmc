@@ -84,16 +84,12 @@ MainController* m_xbmcController;
   [m_xbmcController startAnimation];
 }
 
-- (BOOL)application:(UIApplication *)app
-  openURL:(NSURL *)url options:(NSDictionary<NSString *, id> *)options
+- (BOOL)application:(UIApplication *)app openURL:(NSURL *)url options:(NSDictionary<NSString *, id> *)options
 {
   NSArray *urlComponents = [[url absoluteString] componentsSeparatedByString:@"/"];
   NSString *action = urlComponents[2];
   if ([action isEqualToString:@"display"] || [action isEqualToString:@"play"])
-  {
-    std::string cleanURL = *new std::string([[url absoluteString] UTF8String]);
-    CTVOSTopShelf::GetInstance().HandleTopShelfUrl(cleanURL,true);
-  }
+    CTVOSTopShelf::GetInstance().HandleTopShelfUrl(std::string{url.absoluteString.UTF8String}, true);
   return YES;
 }
 
