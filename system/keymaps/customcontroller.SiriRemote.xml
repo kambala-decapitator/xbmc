@@ -41,6 +41,7 @@
       <!-- swipe up --> <!-- <button id="8">FirstPage</button> -->
       <!-- swipe down --> <!-- <button id="9">LastPage</button> -->
       <!-- swipe left --> <!-- <button id="10">PageUp</button> -->
+      <!-- swipe left --> <button id="10">FullScreen</button>
       <!-- swipe right --> <!-- <button id="11">PageDown</button> -->
       <!-- play/pause --> <button id="12">PlayPause</button>
       <!-- ir play --> <button id="13">Play</button>
@@ -68,7 +69,7 @@
       <button id="7">Info</button>
       <button id="8">AudioNextLanguage</button>
       <button id="9">NextSubtitle</button>
-      <button id="10">CodecInfo</button>
+      <button id="11">CodecInfo</button>
   </customcontroller>
   </FullscreenVideo>
   <FullscreenLiveTV>
@@ -82,7 +83,7 @@
       <button id="7">ActivateWindow(TVGuide)</button>
       <button id="8">AudioNextLanguage</button>
       <button id="9">NextSubtitle</button>
-      <button id="10">CodecInfo</button>
+      <button id="11">CodecInfo</button>
     </customcontroller>
   </FullscreenLiveTV>
   <FullscreenRadio>
@@ -93,7 +94,7 @@
       <button id="4">StepForward</button>
       <button id="5">OSD</button>
       <button id="6">Back</button>
-      <button id="10">CodecInfo</button>
+      <button id="11">CodecInfo</button>
     </customcontroller>
   </FullscreenRadio>
   <Visualisation>
