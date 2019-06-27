@@ -14,10 +14,12 @@
   UIWindow      *_internalWindow;
   UIView        *_touchView;
   NSTimer       *_sleepTimer;
+  UILabel       *_descriptionLabel;
 }
 - (id)init;
 - (void)createGestureRecognizers;
 - (void)fadeToBlack;
 - (void)fadeFromBlack;
 - (void)startSleepTimer;
+- (void)updateText;
 @end

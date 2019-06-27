@@ -224,6 +224,11 @@ static CEvent screenChangeEvent;
   }
 }
 //--------------------------------------------------------------
+- (void)updateTextInExternalTouchController
+{
+  [_externalTouchController updateText];
+}
+//--------------------------------------------------------------
 + (id) sharedInstance
 {
 	static IOSScreenManager* sharedManager = nil;

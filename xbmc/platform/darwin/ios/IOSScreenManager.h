@@ -43,4 +43,5 @@
 - (bool)    willSwitchToInternal:(unsigned int) screenIdx;
 // singleton access
 + (id)      sharedInstance;
+- (void)updateTextInExternalTouchController;
 @end

@@ -56,34 +56,19 @@ const CGFloat timeFadeSecs                    = 2.0;
     //send the image to the background
     [_touchView sendSubviewToBack:xbmcLogoView];
 
-    CGRect labelRect = frame;
-    labelRect.size.height/=2;
     //uilabel with the description
-    descriptionLabel = [[UILabel alloc] initWithFrame:labelRect];
+    descriptionLabel = [[UILabel alloc] initWithFrame:frame];
     //gray textcolor on transparent background
-    [descriptionLabel setTextColor:[UIColor grayColor]];
-    [descriptionLabel setBackgroundColor:[UIColor clearColor]];
+    [descriptionLabel setTextColor:[UIColor whiteColor]];
+    [descriptionLabel setBackgroundColor:[UIColor colorWithWhite:0.0 alpha:0.25]];
     //text is aligned left in its frame
     [descriptionLabel setTextAlignment:NSTextAlignmentCenter];
-    [descriptionLabel setContentMode:UIViewContentModeCenter];
     //setup multiline behaviour
-    [descriptionLabel setLineBreakMode:(NSLineBreakMode)NSLineBreakByTruncatingTail];
-
-    [descriptionLabel setNumberOfLines:5];
-    std::string descText    = g_localizeStrings.Get(34404) + "\n";
-    descText              += g_localizeStrings.Get(34405) + "\n";
-    descText              += g_localizeStrings.Get(34406) + "\n";
-    descText              += g_localizeStrings.Get(34407) + "\n";
-    descText              += g_localizeStrings.Get(34408) + "\n";
-
-    NSString *stringFromUTFString = [[NSString alloc] initWithUTF8String:descText.c_str()];
-
-    [descriptionLabel setText:stringFromUTFString];
-
-    //resize it to full view
-    [descriptionLabel setAutoresizingMask:UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight];
-    [descriptionLabel setAutoresizesSubviews:YES];
+    [descriptionLabel setLineBreakMode:NSLineBreakByTruncatingTail];
+    descriptionLabel.numberOfLines = 0;
     [_touchView addSubview:descriptionLabel];
+    _descriptionLabel = descriptionLabel;
+    [self updateText];
 
     [[self view] addSubview: _touchView];
 
@@ -103,6 +88,14 @@ const CGFloat timeFadeSecs                    = 2.0;
 - (UIInterfaceOrientationMask)supportedInterfaceOrientations
 {
   return UIInterfaceOrientationMaskLandscape;
+}
+//--------------------------------------------------------------
+- (void)updateText
+{
+  std::string descText;
+  for (uint32_t stringCode = 34404; stringCode <= 34408; ++stringCode)
+    descText += g_localizeStrings.Get(stringCode) + "\n";
+  _descriptionLabel.text = @(descText.c_str());
 }
 //--------------------------------------------------------------
 - (void)startSleepTimer

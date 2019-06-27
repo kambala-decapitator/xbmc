@@ -375,6 +375,7 @@ using namespace KODI::MESSAGING;
       readyToRun = false;
       ELOG(@"%sUnable to initialize application", __PRETTY_FUNCTION__);
     }
+  [[IOSScreenManager sharedInstance] performSelectorOnMainThread:@selector(updateTextInExternalTouchController) withObject:nil waitUntilDone:NO];
 
     if (readyToRun)
     {
