@@ -238,24 +238,25 @@ bool CWinSystemIOS::GetScreenResolution(int* w, int* h, double* fps, int screenI
     *w = firstMode.size.width;
     *h = firstMode.size.height;
   }
+
+  // at very first start up we cache the internal screen resolution
+  // because when using external screens and need to go back
+  // to internal we are not able to determine the eagl bounds
+  // before we really switched back to internal
+  // but display settings ask for the internal resolution before
+  // switching. So we give the cached values back in that case.
+  if (m_internalTouchscreenResolutionWidth == -1 &&
+      m_internalTouchscreenResolutionHeight == -1)
+  {
+    m_internalTouchscreenResolutionWidth = [g_xbmcController getScreenSize].width;
+    m_internalTouchscreenResolutionHeight = [g_xbmcController getScreenSize].height;
+  }
   
   // for mainscreen use the eagl bounds from xbmcController
   // because mainscreen is might be 90° rotate dependend on
   // the device and eagl gives the correct values in all cases.
   if(screenIdx == 0)
   {
-    // at very first start up we cache the internal screen resolution
-    // because when using external screens and need to go back
-    // to internal we are not able to determine the eagl bounds
-    // before we really switched back to internal
-    // but display settings ask for the internal resolution before
-    // switching. So we give the cached values back in that case.
-    if (m_internalTouchscreenResolutionWidth == -1 &&
-        m_internalTouchscreenResolutionHeight == -1)
-    {
-      m_internalTouchscreenResolutionWidth = [g_xbmcController getScreenSize].width;
-      m_internalTouchscreenResolutionHeight = [g_xbmcController getScreenSize].height;
-    }
     
     *w = m_internalTouchscreenResolutionWidth;
     *h = m_internalTouchscreenResolutionHeight;
