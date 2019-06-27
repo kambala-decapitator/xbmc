@@ -74,11 +74,10 @@ const CGFloat timeFadeSecs                    = 2.0;
 
     [self createGestureRecognizers];
 
-    [_internalWindow addSubview:[self view]];
     [_internalWindow setBackgroundColor:[UIColor blackColor]];
     [_internalWindow setScreen:[UIScreen mainScreen]];
-    [_internalWindow makeKeyAndVisible];
     [_internalWindow setRootViewController:self];
+    [_internalWindow makeKeyAndVisible];
 
     [self startSleepTimer];//will fade from black too
   }
@@ -267,7 +266,7 @@ const CGFloat timeFadeSecs                    = 2.0;
 {
   if([self wakeUpFromSleep])
   {
-    [g_xbmcController sendKey:XBMCK_c];
+    [self sendXBMCK_c];
   }
 }
 //--------------------------------------------------------------
@@ -277,7 +276,7 @@ const CGFloat timeFadeSecs                    = 2.0;
   {
     if (sender.state == UIGestureRecognizerStateEnded)
     {
-      [self handleDoubleFingerSingleTap:sender];
+      [self sendXBMCK_c];
     }
   }
 }
@@ -288,6 +287,10 @@ const CGFloat timeFadeSecs                    = 2.0;
   {
     [g_xbmcController sendKey:XBMCK_RETURN];
   }
+}
+- (void)sendXBMCK_c
+{
+  [g_xbmcController sendKey:XBMCK_c];
 }
 //--------------------------------------------------------------
 - (void)viewWillAppear:(BOOL)animated
