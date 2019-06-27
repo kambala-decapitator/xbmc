@@ -297,9 +297,13 @@ void CWinSystemIOS::FillInVideoModes(int screenIdx)
   double refreshrate = 0.0;
   //screen 0 is mainscreen - 1 has to be the external one...
   UIScreen *aScreen = [[UIScreen screens]objectAtIndex:screenIdx];
+  auto portraitSize = aScreen.nativeBounds.size;
   //found external screen
   for ( UIScreenMode *mode in [aScreen availableModes] )
   {
+    if (screenIdx == 0 && CGSizeEqualToSize(mode.size, portraitSize))
+      continue;
+
     w = mode.size.width;
     h = mode.size.height;
 
