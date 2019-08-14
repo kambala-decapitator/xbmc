@@ -21,7 +21,6 @@
 #import "interfaces/AnnouncementManager.h"
 #import "network/NetworkServices.h"
 #import "messaging/ApplicationMessenger.h"
-#import "platform/darwin/AutoPool.h"
 #import "platform/darwin/NSLogDebugHelpers.h"
 #import "platform/darwin/ios-common/AnnounceReceiver.h"
 #import "platform/darwin/ios-common/IOSKeyboardView.h"
@@ -153,7 +152,6 @@ XBMCController* g_xbmcController;
   if (self.remoteIdleTimer != nil)
   {
     [self.remoteIdleTimer invalidate];
-    [self.remoteIdleTimer release];
     self.remoteIdleTimer = nil;
   }
   m_remoteIdleState = false;
@@ -207,7 +205,6 @@ XBMCController* g_xbmcController;
   if (self.pressAutoRepeatTimer != nil)
   {
     [self.pressAutoRepeatTimer invalidate];
-    [self.pressAutoRepeatTimer release];
     self.pressAutoRepeatTimer = nil;
   }
 }
@@ -395,7 +392,6 @@ XBMCController* g_xbmcController;
     swipeRecognizer.direction = swipeDirection;
     swipeRecognizer.delegate = self;
     [m_glView addGestureRecognizer:swipeRecognizer];
-    [swipeRecognizer release];
   }
 }
 
@@ -407,7 +403,6 @@ XBMCController* g_xbmcController;
     initWithTarget:self action:@selector(handlePan:)];
   pan.delegate = self;
   [m_glView addGestureRecognizer:pan];
-  [pan release];
   m_clickResetPan = false;
 }
 //--------------------------------------------------------------
@@ -423,7 +418,6 @@ XBMCController* g_xbmcController;
     arrowRecognizer.allowedPressTypes = allowedPressTypes;
     arrowRecognizer.delegate = self;
     [m_glView addGestureRecognizer:arrowRecognizer];
-    [arrowRecognizer release];
 
     // @todo doesn't seem to work
     // we need UILongPressGestureRecognizer here because it will give
@@ -435,7 +429,6 @@ XBMCController* g_xbmcController;
     longArrowRecognizer.minimumPressDuration = 0.01;
     longArrowRecognizer.delegate = self;
     [m_glView addGestureRecognizer: longArrowRecognizer];
-    [longArrowRecognizer release];
   }
 }
 //--------------------------------------------------------------
@@ -446,7 +439,6 @@ XBMCController* g_xbmcController;
   menuRecognizer.allowedPressTypes = @[@(UIPressTypeMenu)];
   menuRecognizer.delegate  = self;
   [m_glView addGestureRecognizer: menuRecognizer];
-  [menuRecognizer release];
 
   auto playPauseTypes = @[@(UIPressTypePlayPause)];
   auto playPauseRecognizer = [[UITapGestureRecognizer alloc]
@@ -454,7 +446,6 @@ XBMCController* g_xbmcController;
   playPauseRecognizer.allowedPressTypes = playPauseTypes;
   playPauseRecognizer.delegate  = self;
   [m_glView addGestureRecognizer: playPauseRecognizer];
-  [playPauseRecognizer release];
 
   auto doublePlayPauseRecognizer = [[UITapGestureRecognizer alloc]
                               initWithTarget: self action: @selector(doublePlayPausePressed:)];
@@ -463,14 +454,12 @@ XBMCController* g_xbmcController;
   doublePlayPauseRecognizer.delegate  = self;
   [m_glView.gestureRecognizers.lastObject requireGestureRecognizerToFail:doublePlayPauseRecognizer];
   [m_glView addGestureRecognizer: doublePlayPauseRecognizer];
-  [doublePlayPauseRecognizer release];
 
   auto longPlayPauseRecognizer = [[UILongPressGestureRecognizer alloc]
                               initWithTarget: self action: @selector(longPlayPausePressed:)];
   longPlayPauseRecognizer.allowedPressTypes = playPauseTypes;
   longPlayPauseRecognizer.delegate  = self;
   [m_glView addGestureRecognizer: longPlayPauseRecognizer];
-  [longPlayPauseRecognizer release];
 
   auto selectTypes = @[@(UIPressTypeSelect)];
   auto longSelectRecognizer = [[UILongPressGestureRecognizer alloc]
@@ -486,7 +475,6 @@ XBMCController* g_xbmcController;
   selectRecognizer.delegate = self;
   [longSelectRecognizer requireGestureRecognizerToFail:selectRecognizer];
   [m_glView addGestureRecognizer: selectRecognizer];
-  [selectRecognizer release];
 
   auto doubleSelectRecognizer = [[UITapGestureRecognizer alloc]
                            initWithTarget: self action: @selector(SiriDoubleSelectHandler:)];
@@ -496,9 +484,6 @@ XBMCController* g_xbmcController;
   [longSelectRecognizer requireGestureRecognizerToFail:doubleSelectRecognizer];
   [m_glView.gestureRecognizers.lastObject requireGestureRecognizerToFail:doubleSelectRecognizer];
   [m_glView addGestureRecognizer: doubleSelectRecognizer];
-  [doubleSelectRecognizer release];
-  
-  [longSelectRecognizer release];
 }
 
 //--------------------------------------------------------------
@@ -1096,15 +1081,11 @@ XBMCController* g_xbmcController;
   [self disableBackGroundTask];
 
   [self stopAnimation];
-  [m_glView release];
-  [m_window release];
-
-  [super dealloc];
 }
 //--------------------------------------------------------------
 - (void)loadView
 {
-  self.view = [[[UIView alloc] initWithFrame:m_window.bounds] autorelease];
+  self.view = [[UIView alloc] initWithFrame:m_window.bounds];
   self.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
   self.view.autoresizesSubviews = YES;
 
@@ -1170,7 +1151,7 @@ XBMCController* g_xbmcController;
   // which would be shown whenever this UIResponder
   // becomes the first responder (which is always the case!)
   // caused by implementing the UIKeyInput protocol
-  return [[[UIView alloc] initWithFrame:CGRectZero] autorelease];
+  return [[UIView alloc] initWithFrame:CGRectZero];
 }
 //--------------------------------------------------------------
 - (BOOL)canBecomeFirstResponder
@@ -1288,9 +1269,7 @@ XBMCController* g_xbmcController;
 {
   // tvOS only support one mode, the current one,
   // pass back an array with this inside.
-  NSMutableArray* array = [[[NSMutableArray alloc] initWithCapacity:1] autorelease];
-  [array addObject:[screen currentMode]];
-  return array;
+  return @[screen.currentMode];
 }
 
 //--------------------------------------------------------------
@@ -1673,46 +1652,48 @@ int KODI_Run(bool renderGUI)
 //--------------------------------------------------------------
 - (void)runAnimation:(id)arg
 {
-  CCocoaAutoPool outerpool;
-  [[NSThread currentThread] setName:@"XBMC_Run"];
-
-  // signal the thread is alive
-  NSConditionLock* myLock = arg;
-  [myLock lock];
-
-  // Prevent child processes from becoming zombies on exit
-  // if not waited upon. See also Util::Command
-  struct sigaction sa;
-  memset(&sa, 0, sizeof(sa));
-  sa.sa_flags = SA_NOCLDWAIT;
-  sa.sa_handler = SIG_IGN;
-  sigaction(SIGCHLD, &sa, NULL);
-
-  setlocale(LC_NUMERIC, "C");
-
-  int status = 0;
-  try
+  @autoreleasepool
   {
-    // set up some Kodi specific relationships
-//    XBMC::Context run_context; //! @todo
-    m_appAlive = TRUE;
-    // start up with gui enabled
-    status = KODI_Run(true);
-    // we exited or died.
-    g_application.SetRenderGUI(false);
-  }
-  catch(...)
-  {
-    m_appAlive = FALSE;
-    ELOG(@"%sException caught on main loop status=%d. Exiting", __PRETTY_FUNCTION__, status);
-  }
+    [[NSThread currentThread] setName:@"XBMC_Run"];
 
-  // signal the thread is dead
-  [myLock unlockWithCondition:TRUE];
+    // signal the thread is alive
+    NSConditionLock* myLock = arg;
+    [myLock lock];
 
-  [self enableScreenSaver];
-  [self enableSystemSleep];
-  [self performSelectorOnMainThread:@selector(CallExit) withObject:nil  waitUntilDone:NO];
+    // Prevent child processes from becoming zombies on exit
+    // if not waited upon. See also Util::Command
+    struct sigaction sa;
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_flags = SA_NOCLDWAIT;
+    sa.sa_handler = SIG_IGN;
+    sigaction(SIGCHLD, &sa, NULL);
+
+    setlocale(LC_NUMERIC, "C");
+
+    int status = 0;
+    try
+    {
+      // set up some Kodi specific relationships
+      //    XBMC::Context run_context; //! @todo
+      m_appAlive = TRUE;
+      // start up with gui enabled
+      status = KODI_Run(true);
+      // we exited or died.
+      g_application.SetRenderGUI(false);
+    }
+    catch(...)
+    {
+      m_appAlive = FALSE;
+      ELOG(@"%sException caught on main loop status=%d. Exiting", __PRETTY_FUNCTION__, status);
+    }
+
+    // signal the thread is dead
+    [myLock unlockWithCondition:TRUE];
+
+    [self enableScreenSaver];
+    [self enableSystemSleep];
+    [self performSelectorOnMainThread:@selector(CallExit) withObject:nil waitUntilDone:NO];
+  }
 }
 
 - (void) CallExit
@@ -1827,7 +1808,6 @@ int KODI_Run(bool renderGUI)
    */
 
   [self setIOSNowPlayingInfo:dict];
-  [dict release];
 
   m_playbackState = IOS_PLAYBACK_PLAYING;
 }
@@ -1862,7 +1842,7 @@ int KODI_Run(bool renderGUI)
 
 #pragma mark - private helper methods
 
-- (void*) getEAGLContextObj
+- (EAGLContext*) getEAGLContextObj
 {
     return [m_glView getCurrentEAGLContext];
 }
