@@ -332,7 +332,7 @@ case $host in
 
         # setup which sdk to use
         target_platform=macosx
-        found_sdk_version=[`$use_xcodebuild -showsdks | grep $target_platform | sort | tail -n 1 | awk '{ print $2}'`]
+        found_sdk_version=[`$use_xcodebuild -showsdks | grep "\-sdk $target_platform" | awk '{ print $2}'`]
         use_sdk="${use_sdk:-$found_sdk_version}"
 
         # now that we know which sdk, error check sdk_name
@@ -372,7 +372,7 @@ case $host in
           platform_min_version="$target_platform-version-min=9.0"
         fi
 
-        found_sdk_version=[`$use_xcodebuild -showsdks | grep $target_platform | sort | tail -n 1 | awk '{ print $2}'`]
+        found_sdk_version=[`$use_xcodebuild -showsdks | grep "\-sdk $target_platform" | awk '{ print $2}'`]
         use_sdk="${use_sdk:-$found_sdk_version}"
         sdk_name=$target_platform$use_sdk
 
@@ -456,8 +456,8 @@ case $use_platform in
      platform_ldflags="-lpthread"
      ;;
   tvos)
-     platform_cflags+=" -fembed-bitcode"
-     platform_cxxflags+=" -fembed-bitcode"
+    platform_cflags+=" -fembed-bitcode"
+    platform_cxxflags+=" -fembed-bitcode"
     if test "$platform_os" != "darwin_embedded"; then
       AC_MSG_ERROR([$use_platform is only supported on the darwin_embedded platform])
     fi
