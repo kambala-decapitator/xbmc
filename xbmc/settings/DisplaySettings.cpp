@@ -834,7 +834,7 @@ void CDisplaySettings::SettingOptionsMonitorsFiller(SettingConstPtr setting, std
 #elif defined(TARGET_DARWIN_IOS)
   CWinSystemIOS *winSystem = dynamic_cast<CWinSystemIOS*>(CServiceBroker::GetWinSystem());
 #elif defined(TARGET_DARWIN_TVOS)
-  CWinSystemTVOS *winSystem = dynamic_cast<CWinSystemTVOS*>(CServiceBroker::GetWinSystem());
+  auto winSystem = dynamic_cast<CWinSystemTVOS*>(CServiceBroker::GetWinSystem());
 #endif
   winSystem->GetConnectedOutputs(&monitors);
   std::string currentMonitor = CServiceBroker::GetSettingsComponent()->GetSettings()->GetString(CSettings::SETTING_VIDEOSCREEN_MONITOR);

@@ -45,7 +45,7 @@ bool CRendererVTB::Register()
 CRendererVTB::CRendererVTB()
 {
   m_textureCache = nullptr;
-  WIN_SYSTEM_CLASS *winSystem = dynamic_cast<WIN_SYSTEM_CLASS *>(CServiceBroker::GetWinSystem());
+  auto winSystem = dynamic_cast<WIN_SYSTEM_CLASS*>(CServiceBroker::GetWinSystem());
   m_glContext = winSystem->GetEAGLContextObj();
   CVReturn ret = CVOpenGLESTextureCacheCreate(kCFAllocatorDefault,
                                               NULL,

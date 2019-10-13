@@ -111,7 +111,7 @@ IDirectory* CDirectoryFactory::Create(const CURL& url)
 #ifdef TARGET_POSIX
   if (url.GetProtocol().empty() || url.IsProtocol("file"))
   {
-#ifdef TARGET_DARWIN_TVOS
+#if defined(TARGET_DARWIN_TVOS)
     if (CTVOSDirectory::WantsDirectory(url))
       return new CTVOSDirectory();
 #endif

@@ -28,9 +28,11 @@
 #if defined(TARGET_DARWIN_IOS)
 #include "ServiceBroker.h"
 #include "windowing/ios/WinSystemIOS.h" // for g_Windowing in CGUITextureManager::FreeUnusedTextures
+#define WIN_SYSTEM_CLASS CWinSystemIOS
 #elif defined(TARGET_DARWIN_TVOS)
 #include "ServiceBroker.h"
 #include "windowing/tvos/WinSystemTVOS.h" // for g_Windowing in CGUITextureManager::FreeUnusedTextures
+#define WIN_SYSTEM_CLASS CWinSystemTVOS
 #endif
 #include "FFmpegImage.h"
 
@@ -504,14 +506,11 @@ void CGUITextureManager::FreeUnusedTextures(unsigned int timeDelay)
 #if defined(HAS_GL) || defined(HAS_GLES)
   for (unsigned int i = 0; i < m_unusedHwTextures.size(); ++i)
   {
-  // on ios the hw textures might be deleted from the os
+  // on iOS/tvOS the hw textures might be deleted from the os
   // when XBMC is backgrounded (e.x. for backgrounded music playback)
   // sanity check before delete in that case.
-#if defined(TARGET_DARWIN_IOS)
-    CWinSystemIOS* winSystem = dynamic_cast<CWinSystemIOS*>(CServiceBroker::GetWinSystem());
-    if (!winSystem->IsBackgrounded() || glIsTexture(m_unusedHwTextures[i]))
-#elif defined(TARGET_DARWIN_TVOS)
-    CWinSystemTVOS* winSystem = dynamic_cast<CWinSystemTVOS*>(CServiceBroker::GetWinSystem());
+#if defined(TARGET_DARWIN_EMBEDDED)
+    auto winSystem = dynamic_cast<WIN_SYSTEM_CLASS*>(CServiceBroker::GetWinSystem());
     if (!winSystem->IsBackgrounded() || glIsTexture(m_unusedHwTextures[i]))
 #endif
       glDeleteTextures(1, (GLuint*) &m_unusedHwTextures[i]);

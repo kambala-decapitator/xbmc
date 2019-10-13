@@ -1115,7 +1115,7 @@ std::string CSysInfo::GetUserAgent()
   if (iDev == "AppleTV")
   {
     // check if it's ATV4 (AppleTV5,3) or later
-    size_t modelMajorNumberEndPos = iDevStr.find_first_of(',', iDevStrDigit);
+    auto modelMajorNumberEndPos = iDevStr.find_first_of(',', iDevStrDigit);
     std::string s{iDevStr, iDevStrDigit, modelMajorNumberEndPos - iDevStrDigit};
     if (stoi(s) >= 5)
       result += "CPU TVOS";
