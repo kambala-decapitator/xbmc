@@ -6,24 +6,26 @@
  *  See LICENSES/README.md for more information.
  */
 
-#include "platform/darwin/ios-common/IOSKeyboard.h"
+#include "DarwinEmbedKeyboard.h"
 
-#include "platform/darwin/NSLogDebugHelpers.h"
-#include "platform/darwin/ios-common/IOSKeyboardView.h"
+#include "platform/darwin/ios-common/DarwinEmbedKeyboardView.h"
+#include "platform/darwin/ios/IOSKeyboardView.h"
 #include "platform/darwin/ios/XBMCController.h"
 
-class CIOSKeyboardImpl
+//#define PLATFORMKEYBOARDVIEW TestKeyboardView;
+
+class CDarwinEmbedKeyboardImpl
 {
 public:
-  KeyboardView* g_pIosKeyboard = nil;
+  IOSKeyboardView* g_pKeyboard = nil;
 };
 
-CIOSKeyboard::CIOSKeyboard()
-  : CGUIKeyboard(), m_pCharCallback{nullptr}, m_bCanceled{false}, m_impl{new CIOSKeyboardImpl}
+CDarwinEmbedKeyboard::CDarwinEmbedKeyboard()
+  : CGUIKeyboard(), m_pCharCallback{nullptr}, m_bCanceled{false}, m_impl{new CDarwinEmbedKeyboardImpl}
 {
 }
 
-bool CIOSKeyboard::ShowAndGetInput(char_callback_t pCallback,
+bool CDarwinEmbedKeyboard::ShowAndGetInput(char_callback_t pCallback,
                                    const std::string& initialString,
                                    std::string& typedString,
                                    const std::string& heading,
@@ -35,24 +37,25 @@ bool CIOSKeyboard::ShowAndGetInput(char_callback_t pCallback,
     @synchronized([KeyboardView class])
     {
       // in case twice open keyboard.
-      if (m_impl->g_pIosKeyboard)
+      if (m_impl->g_pKeyboard)
         return false;
 
+//! @Todo generalise this block for platform
       //create the keyboardview
       __block id blockself;
       dispatch_sync(dispatch_get_main_queue(), ^{
         // assume we are only drawn on the mainscreen ever!
         auto keyboardFrame = [g_xbmcController fullscreenSubviewFrame];
-        blockself = [[KeyboardView alloc] initWithFrame:keyboardFrame];
+        blockself = [[IOSKeyboardView alloc] initWithFrame:keyboardFrame];
       });
 
-      m_impl->g_pIosKeyboard = blockself;
-
-      if (!m_impl->g_pIosKeyboard)
+      m_impl->g_pKeyboard = blockself;
+////////////////////////////////////////////
+      if (!m_impl->g_pKeyboard)
         return false;
 
       // inform the controller that the native keyboard is active
-      // basically as long as m_impl->g_pIosKeyboard exists...
+      // basically as long as m_impl->g_pKeyboard exists...
       [g_xbmcController nativeKeyboardActive:true];
     }
 
@@ -60,43 +63,43 @@ bool CIOSKeyboard::ShowAndGetInput(char_callback_t pCallback,
 
     // init keyboard stuff
     SetTextToKeyboard(initialString);
-    [m_impl->g_pIosKeyboard setHidden:bHiddenInput];
-    [m_impl->g_pIosKeyboard setHeading:@(heading.c_str())];
-    [m_impl->g_pIosKeyboard iosKeyboard] = this; // for calling back
+    [m_impl->g_pKeyboard setHidden:bHiddenInput];
+    [m_impl->g_pKeyboard setHeading:@(heading.c_str())];
+    m_impl->g_pKeyboard.darwinEmbedKeyboard = this; // for calling back
     bool confirmed = false;
     if (!m_bCanceled)
     {
-      [m_impl->g_pIosKeyboard setCancelFlag:&m_bCanceled];
-      [m_impl->g_pIosKeyboard activate]; // blocks and shows keyboard
+      [m_impl->g_pKeyboard setCancelFlag:&m_bCanceled];
+      [m_impl->g_pKeyboard activate]; // blocks and shows keyboard
       // user is done - get resulted text and confirmation
-      confirmed = [m_impl->g_pIosKeyboard isConfirmed];
+      confirmed = [m_impl->g_pKeyboard isConfirmed];
       if (confirmed)
-        typedString = [m_impl->g_pIosKeyboard text].UTF8String;
+        typedString = [m_impl->g_pKeyboard text].UTF8String;
     }
     @synchronized([KeyboardView class])
     {
-      m_impl->g_pIosKeyboard = nil;
+      m_impl->g_pKeyboard = nil;
       [g_xbmcController nativeKeyboardActive:false];
     }
     return confirmed;
   }
 }
 
-void CIOSKeyboard::Cancel()
+void CDarwinEmbedKeyboard::Cancel()
 {
   m_bCanceled = true;
 }
 
-bool CIOSKeyboard::SetTextToKeyboard(const std::string& text, bool closeKeyboard /* = false */)
+bool CDarwinEmbedKeyboard::SetTextToKeyboard(const std::string& text, bool closeKeyboard /* = false */)
 {
-  if (!m_impl->g_pIosKeyboard)
+  if (!m_impl->g_pKeyboard)
     return false;
-  [m_impl->g_pIosKeyboard setKeyboardText:@(text.c_str()) closeKeyboard:closeKeyboard ? YES : NO];
+  [m_impl->g_pKeyboard setKeyboardText:@(text.c_str()) closeKeyboard:closeKeyboard ? YES : NO];
   return true;
 }
 
 //wrap our callback between objc and c++
-void CIOSKeyboard::fireCallback(const std::string& str)
+void CDarwinEmbedKeyboard::fireCallback(const std::string& str)
 {
   if (m_pCharCallback)
   {
