@@ -14,16 +14,19 @@
 {
   bool* m_canceled;
   BOOL m_deactivated;
-  UITextField* m_inputTextField;
-  UITextField* m_inputTextHeading;
-  CGRect m_kbRect;
+  UITextField __weak* m_inputTextField;
+  UILabel __weak* m_inputTextHeading;
+//  CGRect m_kbRect;
 }
 
-@property(nonatomic, strong) NSMutableString* text;
+//@property(nonatomic, strong) NSMutableString* text;
 @property(getter=isConfirmed) BOOL confirmed;
 @property(assign) CDarwinEmbedKeyboard* darwinEmbedKeyboard;
+@property(nonatomic, readonly) NSString* text;
 
 - (instancetype)initWithFrame:(CGRect)frame;
+- (instancetype)init NS_UNAVAILABLE;
+
 - (void)setHeading:(NSString*)heading;
 - (void)setHidden:(BOOL)hidden;
 - (void)activate;

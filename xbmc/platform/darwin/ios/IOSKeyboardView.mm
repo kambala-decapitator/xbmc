@@ -47,9 +47,11 @@
 {
   NSDictionary* info = [notification userInfo];
   CGRect kbRect = [[info objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
-  CLog::Log(LOGDEBUG, "keyboardWillShow: keyboard frame: {}", NSStringFromCGRect(kbRect).UTF8String);
-  m_kbRect = kbRect;
-  [self setNeedsLayout];
+  auto r = [self convertRect:kbRect fromView:self.window];
+  CLog::Log(LOGDEBUG, "keyboardWillShow: keyboard frame: {}, converted {}", NSStringFromCGRect(kbRect).UTF8String, NSStringFromCGRect(r).UTF8String);
+  [m_inputTextField.bottomAnchor constraintEqualToAnchor:self.bottomAnchor constant:-CGRectGetMinY(r)].active = YES;
+//  m_kbRect = kbRect;
+//  [self setNeedsLayout];
   m_keyboardIsShowing = KEYBOARD_WILL_SHOW;
 }
 
@@ -76,9 +78,9 @@
 
 - (BOOL)textFieldShouldReturn:(UITextField*)textField
 {
-  [m_inputTextField resignFirstResponder];
+  [textField resignFirstResponder];
 
-  return [super textFieldShouldReturn:textField];;
+  return [super textFieldShouldReturn:textField];
 }
 
 - (void)keyboardDidChangeFrame:(id)sender
