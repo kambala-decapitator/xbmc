@@ -21,14 +21,15 @@ typedef NS_ENUM(NSUInteger, ShowKeyboardState) {
 @interface IOSKeyboardView ()
 @property(nonatomic, weak) UIView* textFieldContainer;
 @property(nonatomic, weak) NSLayoutConstraint* containerBottomConstraint;
-@property(nonatomic, assign) ShowKeyboardState keyboardIsShowing;
+//@property(nonatomic, assign) ShowKeyboardState keyboardIsShowing;
+@property(nonatomic, assign) bool isKeyboardVisible;
 @end
 
 @implementation IOSKeyboardView : KeyboardView
 
 @synthesize textFieldContainer = m_textFieldContainer;
 @synthesize containerBottomConstraint = m_containerBottomConstraint;
-@synthesize keyboardIsShowing = m_keyboardIsShowing;
+//@synthesize keyboardIsShowing = m_keyboardIsShowing;
 
 - (instancetype)initWithFrame:(CGRect)frame
 {
@@ -36,7 +37,8 @@ typedef NS_ENUM(NSUInteger, ShowKeyboardState) {
   if (!self)
     return nil;
 
-  m_keyboardIsShowing = KEYBOARD_NOT_SHOW;
+//  m_keyboardIsShowing = KEYBOARD_NOT_SHOW;
+  _isKeyboardVisible = false;
 
   self.backgroundColor = [UIColor colorWithWhite:0 alpha:0.1];
 
@@ -91,28 +93,29 @@ typedef NS_ENUM(NSUInteger, ShowKeyboardState) {
 
 - (void)keyboardWillShow:(NSNotification*)notification
 {
-  auto keyboardState = self.keyboardIsShowing;
-  self.keyboardIsShowing = KEYBOARD_WILL_SHOW;
-  if (keyboardState == KEYBOARD_NOT_SHOW)
+  CLog::Log(LOGDEBUG, "{} {}", __PRETTY_FUNCTION__, notification.userInfo.description.UTF8String);
+  //  auto keyboardState = self.keyboardIsShowing;
+  //  self.keyboardIsShowing = KEYBOARD_WILL_SHOW;
+  if (!_isKeyboardVisible)
     self.textFieldContainer.hidden = YES;
 }
 
 - (void)keyboardDidShow:(NSNotification*)notification
 {
-  self.keyboardIsShowing = KEYBOARD_SHOWING;
+  CLog::Log(LOGDEBUG, "{} deactivated: {}, {}", __PRETTY_FUNCTION__, m_deactivated,
+            notification.userInfo.description.UTF8String);
+  //  self.keyboardIsShowing = KEYBOARD_SHOWING;
+  _isKeyboardVisible = true;
   self.textFieldContainer.hidden = NO;
 
-  CLog::Log(LOGDEBUG, "keyboardDidShow: deactivated: {}", m_deactivated);
   if (m_deactivated)
     [self deactivate];
 }
 
 - (BOOL)textFieldShouldEndEditing:(UITextField*)textField
 {
-  CLog::Log(LOGDEBUG, "{}: keyboard IsShowing {}", __PRETTY_FUNCTION__, self.keyboardIsShowing);
-  // Do not break the keyboard show up process, else we will lose
-  // keyboard did hide notification.
-  return self.keyboardIsShowing != KEYBOARD_WILL_SHOW;
+  CLog::Log(LOGDEBUG, "{}: keyboard IsShowing {}", __PRETTY_FUNCTION__, self.isKeyboardVisible);
+  return YES;
 }
 
 - (BOOL)textFieldShouldReturn:(UITextField*)textField
@@ -142,19 +145,14 @@ typedef NS_ENUM(NSUInteger, ShowKeyboardState) {
     return;
   }
 
-  self.keyboardIsShowing = KEYBOARD_NOT_SHOW;
+//  self.keyboardIsShowing = KEYBOARD_NOT_SHOW;
+  _isKeyboardVisible = false;
   [self deactivate];
 }
 
 - (void)deactivate
 {
-  CLog::Log(LOGDEBUG, "{}: keyboard IsShowing {}", __PRETTY_FUNCTION__, self.keyboardIsShowing);
-
-  // Do not break keyboard show up process, if so there's a bug of ios4 will not
-  // notify us keyboard hide.
-  if (self.keyboardIsShowing == KEYBOARD_WILL_SHOW)
-    return;
-    
+  CLog::Log(LOGDEBUG, "{}: keyboard IsShowing {}", __PRETTY_FUNCTION__, self.isKeyboardVisible);
   [super deactivate];
 }
 
