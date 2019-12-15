@@ -14,14 +14,13 @@
 
 //#define PLATFORMKEYBOARDVIEW TestKeyboardView;
 
-class CDarwinEmbedKeyboardImpl
+struct CDarwinEmbedKeyboardImpl
 {
-public:
   IOSKeyboardView* g_pKeyboard = nil;
 };
 
 CDarwinEmbedKeyboard::CDarwinEmbedKeyboard()
-  : CGUIKeyboard(), m_pCharCallback{nullptr}, m_bCanceled{false}, m_impl{new CDarwinEmbedKeyboardImpl}
+  : CGUIKeyboard(), m_impl{std::make_unique<CDarwinEmbedKeyboardImpl>()}
 {
 }
 
@@ -67,9 +66,9 @@ bool CDarwinEmbedKeyboard::ShowAndGetInput(char_callback_t pCallback,
     [m_impl->g_pKeyboard setHeading:@(heading.c_str())];
     m_impl->g_pKeyboard.darwinEmbedKeyboard = this; // for calling back
     bool confirmed = false;
-    if (!m_bCanceled)
+    if (!m_canceled)
     {
-      [m_impl->g_pKeyboard setCancelFlag:&m_bCanceled];
+      [m_impl->g_pKeyboard setCancelFlag:&m_canceled];
       [m_impl->g_pKeyboard activate]; // blocks and shows keyboard
       // user is done - get resulted text and confirmation
       confirmed = [m_impl->g_pKeyboard isConfirmed];
@@ -87,7 +86,7 @@ bool CDarwinEmbedKeyboard::ShowAndGetInput(char_callback_t pCallback,
 
 void CDarwinEmbedKeyboard::Cancel()
 {
-  m_bCanceled = true;
+  m_canceled = true;
 }
 
 bool CDarwinEmbedKeyboard::SetTextToKeyboard(const std::string& text, bool closeKeyboard /* = false */)
@@ -102,7 +101,5 @@ bool CDarwinEmbedKeyboard::SetTextToKeyboard(const std::string& text, bool close
 void CDarwinEmbedKeyboard::fireCallback(const std::string& str)
 {
   if (m_pCharCallback)
-  {
     m_pCharCallback(this, str);
-  }
 }

@@ -8,17 +8,9 @@
 
 #import "platform/darwin/ios-common/DarwinEmbedKeyboardView.h"
 
-typedef NS_ENUM(NSUInteger, ShowKeyboardState) {
-  KEYBOARD_NOT_SHOW,
-  KEYBOARD_WILL_SHOW,
-  KEYBOARD_SHOWING
-};
-
 @interface IOSKeyboardView : KeyboardView
-{
-  ShowKeyboardState m_keyboardIsShowing;
-}
 
-- (instancetype)initWithFrame:(CGRect)frame;
+- (instancetype)init NS_UNAVAILABLE;
++ (instancetype)new NS_UNAVAILABLE;
 
 @end

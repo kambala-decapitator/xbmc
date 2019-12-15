@@ -10,7 +10,7 @@
 
 #include "guilib/GUIKeyboard.h"
 
-class CDarwinEmbedKeyboardImpl;
+struct CDarwinEmbedKeyboardImpl;
 
 class CDarwinEmbedKeyboard : public CGUIKeyboard
 {
@@ -27,7 +27,7 @@ public:
   bool SetTextToKeyboard(const std::string& text, bool closeKeyboard = false) override;
 
 private:
-  char_callback_t m_pCharCallback;
-  bool m_bCanceled;
+  char_callback_t m_pCharCallback = nullptr;
+  bool m_canceled = false;
   std::unique_ptr<CDarwinEmbedKeyboardImpl> m_impl;
 };

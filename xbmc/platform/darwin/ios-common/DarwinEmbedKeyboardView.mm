@@ -17,8 +17,6 @@
 
 static CEvent keyboardFinishedEvent;
 
-static const int INPUT_BOX_HEIGHT = 30;
-
 //@interface KeyboardView ()
 //@property (nonatomic, weak) UITextField* inputTextField;
 //@property (nonatomic, weak) UILabel* inputTextHeading;
@@ -60,31 +58,6 @@ static const int INPUT_BOX_HEIGHT = 30;
   textField.delegate = self;
   [self addSubview:textField];
   m_inputTextField = textField;
-
-  auto label = [UILabel new];
-  label.translatesAutoresizingMaskIntoConstraints = NO;
-  label.backgroundColor = UIColor.whiteColor;
-  [self addSubview:label];
-  m_inputTextHeading = label;
-//  CGRect labelFrame = textFieldFrame;
-//  labelFrame.origin.x = 0;
-//  m_inputTextHeading = [[UITextField alloc] initWithFrame:labelFrame];
-//  m_inputTextHeading.borderStyle = UITextBorderStyleNone;
-//  m_inputTextHeading.backgroundColor = [UIColor whiteColor];
-//  m_inputTextHeading.adjustsFontSizeToFitWidth = YES;
-//  m_inputTextHeading.contentVerticalAlignment = UIControlContentVerticalAlignmentCenter;
-//  m_inputTextHeading.enabled = NO;
-
-
-  [label setContentHuggingPriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisHorizontal];
-  [NSLayoutConstraint activateConstraints:@
-   [
-    [label.leadingAnchor constraintEqualToAnchor:self.leadingAnchor constant:10],
-    [textField.leadingAnchor constraintEqualToAnchor:label.trailingAnchor],
-    [textField.trailingAnchor constraintEqualToAnchor:self.trailingAnchor],
-    [textField.heightAnchor constraintEqualToConstant:INPUT_BOX_HEIGHT],
-    [label.centerYAnchor constraintEqualToAnchor:textField.centerYAnchor],
-    ]];
 
   self.userInteractionEnabled = YES;
 
@@ -138,8 +111,8 @@ static const int INPUT_BOX_HEIGHT = 30;
 {
   dispatch_sync(dispatch_get_main_queue(), ^{
     [g_xbmcController activateKeyboard:self];
+    [self layoutIfNeeded];
     [m_inputTextField becomeFirstResponder];
-    [self setNeedsLayout];
     keyboardFinishedEvent.Reset();
   });
 
