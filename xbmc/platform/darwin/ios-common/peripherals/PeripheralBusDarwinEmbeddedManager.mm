@@ -139,9 +139,9 @@
   int buttonCount = 0;
   if (controllerType == GCCONTROLLER_TYPE::EXTENDED)
   {
-    // Base GCController buttons = 4 dpad, 2 trigger, 2 shoulder, 4 face
-    // As of *OS 13, there are possibly 4 optional buttons - Menu, Options, Left/Right Thumbstick button
-    buttonCount = 12;
+    // Base GCController buttons = Menu, 4 dpad, 2 trigger, 2 shoulder, 4 face
+    // As of *OS 13, there are possibly 3 optional buttons - Options, Left/Right Thumbstick button
+    buttonCount = 13;
     buttonCount += [self.input_GC checkOptionalButtons:deviceId];
   }
   else if (controllerType == GCCONTROLLER_TYPE::MICRO)
