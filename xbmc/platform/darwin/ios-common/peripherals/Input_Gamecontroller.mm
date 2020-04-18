@@ -26,9 +26,8 @@
 #define __IPHONE_13_0 130000
 #endif
 
-@implementation Input_IOSGamecontroller
+struct PlayerControllerState
 {
-  NSMutableArray* controllerArray;
   BOOL dpadLeftPressed;
   BOOL dpadRightPressed;
   BOOL dpadUpPressed;
@@ -41,6 +40,13 @@
   BOOL RightThumbRightPressed;
   BOOL RightThumbUpPressed;
   BOOL RightThumbDownPressed;
+};
+
+@implementation Input_IOSGamecontroller
+{
+  NSMutableArray* controllerArray;
+  // State for each controller
+  struct PlayerControllerState controllerState[4];
   CBPeripheralBusDarwinEmbeddedManager* cbmanager;
   CCriticalSection m_GCMutex;
   CCriticalSection m_controllerMutex;
@@ -177,6 +183,9 @@
   if (!controllerArray)
     return;
 
+  // Reset controller state to ensure default state for next time playerIndex
+  controllerState[static_cast<int>(controller.playerIndex)] = {};
+
   auto i = [controllerArray indexOfObject:controller];
 
   if (i == NSNotFound)
@@ -202,7 +211,7 @@
     NSString* message = nil;
 
     kodi::addon::PeripheralEvent newEvent;
-    newEvent.SetPeripheralIndex(static_cast<int>(controller.playerIndex));
+    newEvent.SetPeripheralIndex(static_cast<unsigned int>(controller.playerIndex));
 
     CSingleLock lock(m_GCMutex);
 
@@ -245,7 +254,7 @@
       message = [self checkdpad:gamepad.dpad
                       withEvent:&newEvent
                   withInputInfo:InputValueInfo{GCCONTROLLER_TYPE::MICRO}
-                withplayerIndex:controller.playerIndex];
+                withplayerIndex:static_cast<int>(controller.playerIndex)];
     }
 
     [cbmanager SetDigitalEvent:newEvent];
@@ -402,7 +411,7 @@
       message = [self checkdpad:gamepad.dpad
                       withEvent:&newEvent
                   withInputInfo:InputValueInfo{GCCONTROLLER_TYPE::EXTENDED}
-                withplayerIndex:controller.playerIndex];
+                withplayerIndex:static_cast<int>(controller.playerIndex)];
     }
     // left stick
     if (gamepad.leftThumbstick == element)
@@ -412,7 +421,7 @@
                             withEvent:&axisEvent
                           withMessage:message
                              withAxis:GCCONTROLLER_EXTENDED_GAMEPAD_AXIS::LEFT
-                      withplayerIndex:controller.playerIndex];
+                      withplayerIndex:static_cast<int>(controller.playerIndex)];
     }
     // right stick
     if (gamepad.rightThumbstick == element)
@@ -422,7 +431,7 @@
                             withEvent:&axisEvent
                           withMessage:message
                              withAxis:GCCONTROLLER_EXTENDED_GAMEPAD_AXIS::RIGHT
-                      withplayerIndex:controller.playerIndex];
+                      withplayerIndex:static_cast<int>(controller.playerIndex)];
     }
     [cbmanager SetDigitalEvent:newEvent];
 
@@ -439,7 +448,7 @@
     // then bring up or remove the paused view controller
 
     kodi::addon::PeripheralEvent newEvent;
-    newEvent.SetPeripheralIndex(static_cast<int>(controller.playerIndex));
+    newEvent.SetPeripheralIndex(static_cast<unsigned int>(controller.playerIndex));
     newEvent.SetType(PERIPHERAL_EVENT_TYPE_DRIVER_BUTTON);
 
     if (controller.extendedGamepad)
@@ -620,7 +629,7 @@
                    withEvent:(kodi::addon::PeripheralEvent*)event
                  withMessage:(NSString*)message
                     withAxis:(GCCONTROLLER_EXTENDED_GAMEPAD_AXIS)thumbstickside
-             withplayerIndex:(GCControllerPlayerIndex)playerIndex
+             withplayerIndex:(int)playerIndex
 {
   // thumbstick released completely - zero both axis
   if (!thumbstick.up.isPressed && !thumbstick.down.isPressed && !thumbstick.left.isPressed &&
@@ -628,10 +637,10 @@
   {
     if (thumbstickside == GCCONTROLLER_EXTENDED_GAMEPAD_AXIS::RIGHT)
     {
-      RightThumbLeftPressed = NO;
-      RightThumbRightPressed = NO;
-      RightThumbUpPressed = NO;
-      RightThumbDownPressed = NO;
+      controllerState[playerIndex].RightThumbLeftPressed = NO;
+      controllerState[playerIndex].RightThumbRightPressed = NO;
+      controllerState[playerIndex].RightThumbUpPressed = NO;
+      controllerState[playerIndex].RightThumbDownPressed = NO;
 
       // Thumbstick release event
       kodi::addon::PeripheralEvent releaseEvent;
@@ -651,10 +660,10 @@
     }
     else
     {
-      LeftThumbLeftPressed = NO;
-      LeftThumbRightPressed = NO;
-      LeftThumbUpPressed = NO;
-      LeftThumbDownPressed = NO;
+      controllerState[playerIndex].LeftThumbLeftPressed = NO;
+      controllerState[playerIndex].LeftThumbRightPressed = NO;
+      controllerState[playerIndex].LeftThumbUpPressed = NO;
+      controllerState[playerIndex].LeftThumbDownPressed = NO;
 
       // Thumbstick release event
       kodi::addon::PeripheralEvent releaseEvent;
@@ -676,15 +685,18 @@
   else
   {
 
-    if (thumbstick.up.isPressed || RightThumbUpPressed || LeftThumbUpPressed)
+    if (thumbstick.up.isPressed || controllerState[playerIndex].RightThumbUpPressed ||
+        controllerState[playerIndex].LeftThumbUpPressed)
     {
       // Thumbstick centered
       if (!thumbstick.up.isPressed)
       {
-        if (RightThumbUpPressed)
-          RightThumbUpPressed = !RightThumbUpPressed;
-        else if (LeftThumbUpPressed)
-          LeftThumbUpPressed = !LeftThumbUpPressed;
+        if (controllerState[playerIndex].RightThumbUpPressed)
+          controllerState[playerIndex].RightThumbUpPressed =
+              !controllerState[playerIndex].RightThumbUpPressed;
+        else if (controllerState[playerIndex].LeftThumbUpPressed)
+          controllerState[playerIndex].LeftThumbUpPressed =
+              !controllerState[playerIndex].LeftThumbUpPressed;
 
         // Thumbstick release event
         kodi::addon::PeripheralEvent newReleaseEvent;
@@ -700,11 +712,14 @@
       }
       else
       {
-        RightThumbUpPressed =
-            (thumbstickside == GCCONTROLLER_EXTENDED_GAMEPAD_AXIS::RIGHT ? YES
-                                                                         : RightThumbUpPressed);
-        LeftThumbUpPressed =
-            (thumbstickside == GCCONTROLLER_EXTENDED_GAMEPAD_AXIS::LEFT ? YES : LeftThumbUpPressed);
+        controllerState[playerIndex].RightThumbUpPressed =
+            (thumbstickside == GCCONTROLLER_EXTENDED_GAMEPAD_AXIS::RIGHT
+                 ? YES
+                 : controllerState[playerIndex].RightThumbUpPressed);
+        controllerState[playerIndex].LeftThumbUpPressed =
+            (thumbstickside == GCCONTROLLER_EXTENDED_GAMEPAD_AXIS::LEFT
+                 ? YES
+                 : controllerState[playerIndex].LeftThumbUpPressed);
 
         [self setAxisValue:thumbstick.yAxis
                  withEvent:event
@@ -716,15 +731,18 @@
         [cbmanager SetAxisEvent:*event];
       }
     }
-    if (thumbstick.down.isPressed || RightThumbDownPressed || LeftThumbDownPressed)
+    if (thumbstick.down.isPressed || controllerState[playerIndex].RightThumbDownPressed ||
+        controllerState[playerIndex].LeftThumbDownPressed)
     {
       // Thumbstick centered
       if (!thumbstick.down.isPressed)
       {
-        if (RightThumbDownPressed)
-          RightThumbDownPressed = !RightThumbDownPressed;
-        else if (LeftThumbDownPressed)
-          LeftThumbDownPressed = !LeftThumbDownPressed;
+        if (controllerState[playerIndex].RightThumbDownPressed)
+          controllerState[playerIndex].RightThumbDownPressed =
+              !controllerState[playerIndex].RightThumbDownPressed;
+        else if (controllerState[playerIndex].LeftThumbDownPressed)
+          controllerState[playerIndex].LeftThumbDownPressed =
+              !controllerState[playerIndex].LeftThumbDownPressed;
 
         // Thumbstick release event
         kodi::addon::PeripheralEvent newReleaseEvent;
@@ -740,12 +758,14 @@
       }
       else
       {
-        RightThumbDownPressed =
-            (thumbstickside == GCCONTROLLER_EXTENDED_GAMEPAD_AXIS::RIGHT ? YES
-                                                                         : RightThumbDownPressed);
-        LeftThumbDownPressed =
-            (thumbstickside == GCCONTROLLER_EXTENDED_GAMEPAD_AXIS::LEFT ? YES
-                                                                        : LeftThumbDownPressed);
+        controllerState[playerIndex].RightThumbDownPressed =
+            (thumbstickside == GCCONTROLLER_EXTENDED_GAMEPAD_AXIS::RIGHT
+                 ? YES
+                 : controllerState[playerIndex].RightThumbDownPressed);
+        controllerState[playerIndex].LeftThumbDownPressed =
+            (thumbstickside == GCCONTROLLER_EXTENDED_GAMEPAD_AXIS::LEFT
+                 ? YES
+                 : controllerState[playerIndex].LeftThumbDownPressed);
 
         [self setAxisValue:thumbstick.yAxis
                  withEvent:event
@@ -757,15 +777,18 @@
         [cbmanager SetAxisEvent:*event];
       }
     }
-    if (thumbstick.left.isPressed || RightThumbLeftPressed || LeftThumbLeftPressed)
+    if (thumbstick.left.isPressed || controllerState[playerIndex].RightThumbLeftPressed ||
+        controllerState[playerIndex].LeftThumbLeftPressed)
     {
       // Thumbstick centered
       if (!thumbstick.left.isPressed)
       {
-        if (RightThumbLeftPressed)
-          RightThumbLeftPressed = !RightThumbLeftPressed;
-        else if (LeftThumbLeftPressed)
-          LeftThumbLeftPressed = !LeftThumbLeftPressed;
+        if (controllerState[playerIndex].RightThumbLeftPressed)
+          controllerState[playerIndex].RightThumbLeftPressed =
+              !controllerState[playerIndex].RightThumbLeftPressed;
+        else if (controllerState[playerIndex].LeftThumbLeftPressed)
+          controllerState[playerIndex].LeftThumbLeftPressed =
+              !controllerState[playerIndex].LeftThumbLeftPressed;
 
         // Thumbstick release event
         kodi::addon::PeripheralEvent newReleaseEvent;
@@ -781,12 +804,14 @@
       }
       else
       {
-        RightThumbLeftPressed =
-            (thumbstickside == GCCONTROLLER_EXTENDED_GAMEPAD_AXIS::RIGHT ? YES
-                                                                         : RightThumbLeftPressed);
-        LeftThumbLeftPressed =
-            (thumbstickside == GCCONTROLLER_EXTENDED_GAMEPAD_AXIS::LEFT ? YES
-                                                                        : LeftThumbLeftPressed);
+        controllerState[playerIndex].RightThumbLeftPressed =
+            (thumbstickside == GCCONTROLLER_EXTENDED_GAMEPAD_AXIS::RIGHT
+                 ? YES
+                 : controllerState[playerIndex].RightThumbLeftPressed);
+        controllerState[playerIndex].LeftThumbLeftPressed =
+            (thumbstickside == GCCONTROLLER_EXTENDED_GAMEPAD_AXIS::LEFT
+                 ? YES
+                 : controllerState[playerIndex].LeftThumbLeftPressed);
 
         [self setAxisValue:thumbstick.xAxis
                  withEvent:event
@@ -798,15 +823,18 @@
         [cbmanager SetAxisEvent:*event];
       }
     }
-    if (thumbstick.right.isPressed || RightThumbRightPressed || LeftThumbRightPressed)
+    if (thumbstick.right.isPressed || controllerState[playerIndex].RightThumbRightPressed ||
+        controllerState[playerIndex].LeftThumbRightPressed)
     {
       // Thumbstick centered
       if (!thumbstick.right.isPressed)
       {
-        if (RightThumbRightPressed)
-          RightThumbRightPressed = !RightThumbRightPressed;
-        else if (LeftThumbRightPressed)
-          LeftThumbRightPressed = !LeftThumbRightPressed;
+        if (controllerState[playerIndex].RightThumbRightPressed)
+          controllerState[playerIndex].RightThumbRightPressed =
+              !controllerState[playerIndex].RightThumbRightPressed;
+        else if (controllerState[playerIndex].LeftThumbRightPressed)
+          controllerState[playerIndex].LeftThumbRightPressed =
+              !controllerState[playerIndex].LeftThumbRightPressed;
 
         // Thumbstick release event
         kodi::addon::PeripheralEvent newReleaseEvent;
@@ -817,18 +845,19 @@
                                 ? GCCONTROLLER_EXTENDED_GAMEPAD_AXIS::RIGHTTHUMB_X
                                 : GCCONTROLLER_EXTENDED_GAMEPAD_AXIS::LEFTTHUMB_X)];
 
-        message = [message
-                   stringByAppendingFormat:@" Right %f", 0.0f];
+        message = [message stringByAppendingFormat:@" Right %f", 0.0f];
         [cbmanager SetAxisEvent:newReleaseEvent];
       }
       else
       {
-        RightThumbRightPressed =
-            (thumbstickside == GCCONTROLLER_EXTENDED_GAMEPAD_AXIS::RIGHT ? YES
-                                                                         : RightThumbRightPressed);
-        LeftThumbRightPressed =
-            (thumbstickside == GCCONTROLLER_EXTENDED_GAMEPAD_AXIS::LEFT ? YES
-                                                                        : LeftThumbRightPressed);
+        controllerState[playerIndex].RightThumbRightPressed =
+            (thumbstickside == GCCONTROLLER_EXTENDED_GAMEPAD_AXIS::RIGHT
+                 ? YES
+                 : controllerState[playerIndex].RightThumbRightPressed);
+        controllerState[playerIndex].LeftThumbRightPressed =
+            (thumbstickside == GCCONTROLLER_EXTENDED_GAMEPAD_AXIS::LEFT
+                 ? YES
+                 : controllerState[playerIndex].LeftThumbRightPressed);
 
         [self setAxisValue:thumbstick.xAxis
                  withEvent:event
@@ -836,9 +865,7 @@
                                 ? GCCONTROLLER_EXTENDED_GAMEPAD_AXIS::RIGHTTHUMB_X
                                 : GCCONTROLLER_EXTENDED_GAMEPAD_AXIS::LEFTTHUMB_X)];
 
-        message = [message
-            stringByAppendingFormat:@" Right %f",
-                   thumbstick.xAxis.value];
+        message = [message stringByAppendingFormat:@" Right %f", thumbstick.xAxis.value];
         [cbmanager SetAxisEvent:*event];
       }
     }
@@ -849,10 +876,11 @@
 - (NSString*)checkdpad:(GCControllerDirectionPad*)dpad
              withEvent:(kodi::addon::PeripheralEvent*)event
          withInputInfo:(InputValueInfo)inputInfo
-       withplayerIndex:(GCControllerPlayerIndex)playerIndex
+       withplayerIndex:(int)playerIndex
 {
   NSString* message = nil;
-  if ((dpad.up.isPressed && !dpadUpPressed) || (!dpad.up.isPressed && dpadUpPressed))
+  if ((dpad.up.isPressed && !controllerState[playerIndex].dpadUpPressed) ||
+      (!dpad.up.isPressed && controllerState[playerIndex].dpadUpPressed))
   {
     message = @"D-Pad Up";
 
@@ -861,7 +889,7 @@
     else if (inputInfo.controllerType == GCCONTROLLER_TYPE::MICRO)
       inputInfo.microButton = GCCONTROLLER_MICRO_GAMEPAD_BUTTON::UP;
 
-    if (!dpadUpPressed)
+    if (!controllerState[playerIndex].dpadUpPressed)
     {
       // Button Down event
       message = [self setButtonState:dpad.up
@@ -880,9 +908,10 @@
                        withInputInfo:inputInfo];
       [cbmanager SetDigitalEvent:newReleaseEvent];
     }
-    dpadUpPressed = !dpadUpPressed;
+    controllerState[playerIndex].dpadUpPressed = !controllerState[playerIndex].dpadUpPressed;
   }
-  if ((dpad.down.isPressed && !dpadDownPressed) || (!dpad.down.isPressed && dpadDownPressed))
+  if ((dpad.down.isPressed && !controllerState[playerIndex].dpadDownPressed) ||
+      (!dpad.down.isPressed && controllerState[playerIndex].dpadDownPressed))
   {
     message = @"D-Pad Down";
 
@@ -891,7 +920,7 @@
     else if (inputInfo.controllerType == GCCONTROLLER_TYPE::MICRO)
       inputInfo.microButton = GCCONTROLLER_MICRO_GAMEPAD_BUTTON::DOWN;
 
-    if (!dpadDownPressed)
+    if (!controllerState[playerIndex].dpadDownPressed)
     {
       // Button Down event
       message = [self setButtonState:dpad.down
@@ -910,9 +939,10 @@
                        withInputInfo:inputInfo];
       [cbmanager SetDigitalEvent:newReleaseEvent];
     }
-    dpadDownPressed = !dpadDownPressed;
+    controllerState[playerIndex].dpadDownPressed = !controllerState[playerIndex].dpadDownPressed;
   }
-  if ((dpad.left.isPressed && !dpadLeftPressed) || (!dpad.left.isPressed && dpadLeftPressed))
+  if ((dpad.left.isPressed && !controllerState[playerIndex].dpadLeftPressed) ||
+      (!dpad.left.isPressed && controllerState[playerIndex].dpadLeftPressed))
   {
     message = @"D-Pad Left";
 
@@ -921,7 +951,7 @@
     else if (inputInfo.controllerType == GCCONTROLLER_TYPE::MICRO)
       inputInfo.microButton = GCCONTROLLER_MICRO_GAMEPAD_BUTTON::LEFT;
 
-    if (!dpadLeftPressed)
+    if (!controllerState[playerIndex].dpadLeftPressed)
     {
       // Button Down event
       message = [self setButtonState:dpad.left
@@ -940,9 +970,10 @@
                        withInputInfo:inputInfo];
       [cbmanager SetDigitalEvent:newReleaseEvent];
     }
-    dpadLeftPressed = !dpadLeftPressed;
+    controllerState[playerIndex].dpadLeftPressed = !controllerState[playerIndex].dpadLeftPressed;
   }
-  if ((dpad.right.isPressed && !dpadRightPressed) || (!dpad.right.isPressed && dpadRightPressed))
+  if ((dpad.right.isPressed && !controllerState[playerIndex].dpadRightPressed) ||
+      (!dpad.right.isPressed && controllerState[playerIndex].dpadRightPressed))
   {
     message = @"D-Pad Right";
 
@@ -951,7 +982,7 @@
     else if (inputInfo.controllerType == GCCONTROLLER_TYPE::MICRO)
       inputInfo.microButton = GCCONTROLLER_MICRO_GAMEPAD_BUTTON::RIGHT;
 
-    if (!dpadRightPressed)
+    if (!controllerState[playerIndex].dpadRightPressed)
     {
       // Button Down event
       message = [self setButtonState:dpad.right
@@ -971,7 +1002,7 @@
                                                     GCCONTROLLER_EXTENDED_GAMEPAD_BUTTON::RIGHT}];
       [cbmanager SetDigitalEvent:newReleaseEvent];
     }
-    dpadRightPressed = !dpadRightPressed;
+    controllerState[playerIndex].dpadRightPressed = !controllerState[playerIndex].dpadRightPressed;
   }
   return message;
 }
