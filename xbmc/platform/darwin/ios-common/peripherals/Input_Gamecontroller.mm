@@ -19,27 +19,22 @@
 #import <Foundation/Foundation.h>
 #import <GameController/GCController.h>
 
-#ifndef __IPHONE_12_1
-#define __IPHONE_12_1 120100
-#endif
-#ifndef __IPHONE_13_0
-#define __IPHONE_13_0 130000
-#endif
+// TODO: replace all `respondsToSelector:` checks with @available after switching to 13 SDK
 
 struct PlayerControllerState
 {
-  BOOL dpadLeftPressed;
-  BOOL dpadRightPressed;
-  BOOL dpadUpPressed;
-  BOOL dpadDownPressed;
-  BOOL LeftThumbLeftPressed;
-  BOOL LeftThumbRightPressed;
-  BOOL LeftThumbUpPressed;
-  BOOL LeftThumbDownPressed;
-  BOOL RightThumbLeftPressed;
-  BOOL RightThumbRightPressed;
-  BOOL RightThumbUpPressed;
-  BOOL RightThumbDownPressed;
+  bool dpadLeftPressed;
+  bool dpadRightPressed;
+  bool dpadUpPressed;
+  bool dpadDownPressed;
+  bool LeftThumbLeftPressed;
+  bool LeftThumbRightPressed;
+  bool LeftThumbUpPressed;
+  bool LeftThumbDownPressed;
+  bool RightThumbLeftPressed;
+  bool RightThumbRightPressed;
+  bool RightThumbUpPressed;
+  bool RightThumbDownPressed;
 };
 
 @implementation Input_IOSGamecontroller
@@ -206,12 +201,11 @@ struct PlayerControllerState
 
 - (void)microValueChangeHandler:(GCController*)controller
 {
-  GCMicroGamepad* profile = controller.microGamepad;
-  profile.valueChangedHandler = ^(GCMicroGamepad* gamepad, GCControllerElement* element) {
-    NSString* message = nil;
+  controller.microGamepad.valueChangedHandler = ^(GCMicroGamepad* gamepad, GCControllerElement* element) {
+    NSString* message;
 
     kodi::addon::PeripheralEvent newEvent;
-    newEvent.SetPeripheralIndex(static_cast<unsigned int>(controller.playerIndex));
+    newEvent.SetPeripheralIndex(static_cast<unsigned int>(gamepad.controller.playerIndex));
 
     CSingleLock lock(m_GCMutex);
 
@@ -225,7 +219,7 @@ struct PlayerControllerState
                                                     GCCONTROLLER_MICRO_GAMEPAD_BUTTON::A}];
     }
     // X button
-    if (gamepad.buttonX == element)
+    else if (gamepad.buttonX == element)
     {
       message = [self setButtonState:gamepad.buttonX
                            withEvent:&newEvent
@@ -233,29 +227,23 @@ struct PlayerControllerState
                        withInputInfo:InputValueInfo{GCCONTROLLER_TYPE::MICRO,
                                                     GCCONTROLLER_MICRO_GAMEPAD_BUTTON::X}];
     }
-
-#if __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_13_0
-    if (@available(iOS 13.0, tvOS 13.0, *))
-    {
-      // buttonMenu
-      if (gamepad.buttonMenu == element)
-      {
-        message = [self setButtonState:gamepad.buttonMenu
-                             withEvent:&newEvent
-                           withMessage:@"Menu Button"
-                         withInputInfo:InputValueInfo{GCCONTROLLER_TYPE::MICRO,
-                                                      GCCONTROLLER_MICRO_GAMEPAD_BUTTON::MENU}];
-      }
-    }
-#endif
     // d-pad
-    if (gamepad.dpad == element)
+    else if (gamepad.dpad == element)
     {
       message = [self checkdpad:gamepad.dpad
                       withEvent:&newEvent
                   withInputInfo:InputValueInfo{GCCONTROLLER_TYPE::MICRO}
                 withplayerIndex:static_cast<int>(controller.playerIndex)];
     }
+      // buttonMenu
+      else if ([gamepad respondsToSelector:@selector(buttonMenu)] && [gamepad performSelector:@selector(buttonMenu)] == element)
+      {
+          message = [self setButtonState:static_cast<GCControllerButtonInput*>(element)
+                               withEvent:&newEvent
+                             withMessage:@"Menu Button"
+                           withInputInfo:InputValueInfo{GCCONTROLLER_TYPE::MICRO,
+                               GCCONTROLLER_MICRO_GAMEPAD_BUTTON::MENU}];
+      }
 
     [cbmanager SetDigitalEvent:newEvent];
     //! @todo Debug Purposes only - excessive log spam
@@ -268,14 +256,14 @@ struct PlayerControllerState
 
 - (void)extendedValueChangeHandler:(GCController*)controller
 {
-  auto profile = controller.extendedGamepad;
-  profile.valueChangedHandler = ^(GCExtendedGamepad* gamepad, GCControllerElement* element) {
+  controller.extendedGamepad.valueChangedHandler = ^(GCExtendedGamepad* gamepad, GCControllerElement* element) {
     NSString* message = nil;
 
     kodi::addon::PeripheralEvent newEvent;
     kodi::addon::PeripheralEvent axisEvent;
-    newEvent.SetPeripheralIndex(static_cast<int>(controller.playerIndex));
-    axisEvent.SetPeripheralIndex(static_cast<int>(controller.playerIndex));
+      auto index = static_cast<int>(gamepad.controller.playerIndex);
+    newEvent.SetPeripheralIndex(index);
+    axisEvent.SetPeripheralIndex(index);
 
     CSingleLock lock(m_GCMutex);
 
@@ -290,7 +278,7 @@ struct PlayerControllerState
                                               GCCONTROLLER_EXTENDED_GAMEPAD_BUTTON::LEFTTRIGGER}];
     }
     // right trigger
-    if (gamepad.rightTrigger == element)
+    else if (gamepad.rightTrigger == element)
     {
       message =
           [self setButtonState:gamepad.rightTrigger
@@ -300,7 +288,7 @@ struct PlayerControllerState
                                               GCCONTROLLER_EXTENDED_GAMEPAD_BUTTON::RIGHTTRIGGER}];
     }
     // left shoulder button
-    if (gamepad.leftShoulder == element)
+    else if (gamepad.leftShoulder == element)
     {
       message =
           [self setButtonState:gamepad.leftShoulder
@@ -310,7 +298,7 @@ struct PlayerControllerState
                                               GCCONTROLLER_EXTENDED_GAMEPAD_BUTTON::LEFTSHOULDER}];
     }
     // right shoulder button
-    if (gamepad.rightShoulder == element)
+    else if (gamepad.rightShoulder == element)
     {
       message =
           [self setButtonState:gamepad.rightShoulder
@@ -320,7 +308,7 @@ struct PlayerControllerState
                                               GCCONTROLLER_EXTENDED_GAMEPAD_BUTTON::RIGHTSHOULDER}];
     }
     // A button
-    if (gamepad.buttonA == element)
+    else if (gamepad.buttonA == element)
     {
       message = [self setButtonState:gamepad.buttonA
                            withEvent:&newEvent
@@ -329,7 +317,7 @@ struct PlayerControllerState
                                                     GCCONTROLLER_EXTENDED_GAMEPAD_BUTTON::A}];
     }
     // B button
-    if (gamepad.buttonB == element)
+    else if (gamepad.buttonB == element)
     {
       message = [self setButtonState:gamepad.buttonB
                            withEvent:&newEvent
@@ -338,7 +326,7 @@ struct PlayerControllerState
                                                     GCCONTROLLER_EXTENDED_GAMEPAD_BUTTON::B}];
     }
     // X button
-    if (gamepad.buttonX == element)
+    else if (gamepad.buttonX == element)
     {
       message = [self setButtonState:gamepad.buttonX
                            withEvent:&newEvent
@@ -347,7 +335,7 @@ struct PlayerControllerState
                                                     GCCONTROLLER_EXTENDED_GAMEPAD_BUTTON::X}];
     }
     // Y button
-    if (gamepad.buttonY == element)
+    else if (gamepad.buttonY == element)
     {
       message = [self setButtonState:gamepad.buttonY
                            withEvent:&newEvent
@@ -355,58 +343,8 @@ struct PlayerControllerState
                        withInputInfo:InputValueInfo{GCCONTROLLER_TYPE::EXTENDED,
                                                     GCCONTROLLER_EXTENDED_GAMEPAD_BUTTON::Y}];
     }
-    // buttonMenu
-#if __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_13_0
-    if (@available(iOS 13.0, tvOS 13.0, *))
-    {
-      if (gamepad.buttonMenu == element)
-      {
-        message = [self setButtonState:gamepad.buttonMenu
-                             withEvent:&newEvent
-                           withMessage:@"Menu Button"
-                         withInputInfo:InputValueInfo{GCCONTROLLER_TYPE::EXTENDED,
-                                                      GCCONTROLLER_EXTENDED_GAMEPAD_BUTTON::MENU}];
-      }
-      if (gamepad.buttonOptions == element)
-      {
-        message =
-            [self setButtonState:gamepad.buttonOptions
-                       withEvent:&newEvent
-                     withMessage:@"Option Button"
-                   withInputInfo:InputValueInfo{GCCONTROLLER_TYPE::EXTENDED,
-                                                GCCONTROLLER_EXTENDED_GAMEPAD_BUTTON::OPTION}];
-      }
-    }
-#endif
-#if __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_12_1
-    if (@available(iOS 12.1, tvOS 12.1, *))
-    {
-      // Left Thumbstick Button
-      if (gamepad.leftThumbstickButton == element)
-      {
-        message =
-            [self setButtonState:gamepad.leftThumbstickButton
-                       withEvent:&newEvent
-                     withMessage:@"Left Thumbstick Button"
-                   withInputInfo:InputValueInfo{
-                                     GCCONTROLLER_TYPE::EXTENDED,
-                                     GCCONTROLLER_EXTENDED_GAMEPAD_BUTTON::LEFTTHUMBSTICKBUTTON}];
-      }
-      // Right Thumbstick Button
-      if (gamepad.rightThumbstickButton == element)
-      {
-        message =
-            [self setButtonState:gamepad.rightThumbstickButton
-                       withEvent:&newEvent
-                     withMessage:@"Right Thumbstick Button"
-                   withInputInfo:InputValueInfo{
-                                     GCCONTROLLER_TYPE::EXTENDED,
-                                     GCCONTROLLER_EXTENDED_GAMEPAD_BUTTON::RIGHTTHUMBSTICKBUTTON}];
-      }
-    }
-#endif
     // d-pad
-    if (gamepad.dpad == element)
+    else if (gamepad.dpad == element)
     {
       message = [self checkdpad:gamepad.dpad
                       withEvent:&newEvent
@@ -414,24 +352,66 @@ struct PlayerControllerState
                 withplayerIndex:static_cast<int>(controller.playerIndex)];
     }
     // left stick
-    if (gamepad.leftThumbstick == element)
+    else if (gamepad.leftThumbstick == element)
     {
-      message = @"Left Stick";
       message = [self checkthumbstick:gamepad.leftThumbstick
                             withEvent:&axisEvent
-                          withMessage:message
+                          withMessage:@"Left Stick"
                              withAxis:GCCONTROLLER_EXTENDED_GAMEPAD_AXIS::LEFT
                       withplayerIndex:static_cast<int>(controller.playerIndex)];
     }
     // right stick
-    if (gamepad.rightThumbstick == element)
+    else if (gamepad.rightThumbstick == element)
     {
-      message = @"Right Stick";
       message = [self checkthumbstick:gamepad.rightThumbstick
                             withEvent:&axisEvent
-                          withMessage:message
+                          withMessage:@"Right Stick"
                              withAxis:GCCONTROLLER_EXTENDED_GAMEPAD_AXIS::RIGHT
                       withplayerIndex:static_cast<int>(controller.playerIndex)];
+    }
+    // buttonMenu
+      else if ([gamepad respondsToSelector:@selector(buttonMenu)] && [gamepad performSelector:@selector(buttonMenu)] == element)
+      {
+          message = [self setButtonState:static_cast<GCControllerButtonInput*>(element)
+                               withEvent:&newEvent
+                             withMessage:@"Menu Button"
+                           withInputInfo:InputValueInfo{GCCONTROLLER_TYPE::EXTENDED,
+                               GCCONTROLLER_EXTENDED_GAMEPAD_BUTTON::MENU}];
+      }
+      // buttonOptions
+      else if ([gamepad respondsToSelector:@selector(buttonOptions)] && [gamepad performSelector:@selector(buttonOptions)] == element)
+      {
+          message =
+          [self setButtonState:static_cast<GCControllerButtonInput*>(element)
+                     withEvent:&newEvent
+                   withMessage:@"Option Button"
+                 withInputInfo:InputValueInfo{GCCONTROLLER_TYPE::EXTENDED,
+                     GCCONTROLLER_EXTENDED_GAMEPAD_BUTTON::OPTION}];
+      }
+    if (@available(iOS 12.1, *))
+    {
+        // Left Thumbstick Button
+        if (gamepad.leftThumbstickButton == element)
+        {
+            message =
+            [self setButtonState:gamepad.leftThumbstickButton
+                       withEvent:&newEvent
+                     withMessage:@"Left Thumbstick Button"
+                   withInputInfo:InputValueInfo{
+                GCCONTROLLER_TYPE::EXTENDED,
+                GCCONTROLLER_EXTENDED_GAMEPAD_BUTTON::LEFTTHUMBSTICKBUTTON}];
+        }
+        // Right Thumbstick Button
+        else if (gamepad.rightThumbstickButton == element)
+        {
+            message =
+            [self setButtonState:gamepad.rightThumbstickButton
+                       withEvent:&newEvent
+                     withMessage:@"Right Thumbstick Button"
+                   withInputInfo:InputValueInfo{
+                GCCONTROLLER_TYPE::EXTENDED,
+                GCCONTROLLER_EXTENDED_GAMEPAD_BUTTON::RIGHTTHUMBSTICKBUTTON}];
+        }
     }
     [cbmanager SetDigitalEvent:newEvent];
 
@@ -512,7 +492,6 @@ struct PlayerControllerState
 
 - (PERIPHERALS::PeripheralScanResults)GetGCDevices
 {
-
   PERIPHERALS::PeripheralScanResults scanresults;
 
   if (controllerArray.count == 0)
@@ -529,13 +508,11 @@ struct PlayerControllerState
     peripheralScanResult.m_mappedType = PERIPHERALS::PERIPHERAL_JOYSTICK;
 
     if (controller.extendedGamepad)
-    {
       peripheralScanResult.m_strDeviceName = "Extended Gamepad";
-    }
     else if (controller.microGamepad)
-    {
       peripheralScanResult.m_strDeviceName = "Micro Gamepad";
-    }
+      else
+      peripheralScanResult.m_strDeviceName = "Unknown Gamepad";
 
     peripheralScanResult.m_busType = PERIPHERALS::PERIPHERAL_BUS_DARWINEMBEDDED;
     peripheralScanResult.m_mappedBusType = PERIPHERALS::PERIPHERAL_BUS_DARWINEMBEDDED;
@@ -548,24 +525,19 @@ struct PlayerControllerState
 
 - (GCCONTROLLER_TYPE)GetGCControllerType:(int)deviceID
 {
-
-  __block auto controllertype = GCCONTROLLER_TYPE::NOTFOUND;
-
-  (void)[controllerArray
-      indexOfObjectPassingTest:^BOOL(GCController* controller, NSUInteger idx, BOOL* stop) {
-        if (controller.playerIndex == deviceID)
-        {
-          *stop = YES;
-          if (controller.extendedGamepad)
-            controllertype = GCCONTROLLER_TYPE::EXTENDED;
-          else if (controller.microGamepad)
-            controllertype = GCCONTROLLER_TYPE::MICRO;
-          return YES;
-        }
-        return NO;
-      }];
-
-  return controllertype;
+    GCController* controller;
+    for (GCController* aController in controllerArray) {
+        if (controller.playerIndex != deviceID)
+            continue;
+        controller = aController;
+        break;
+    }
+    if (controller.extendedGamepad)
+      return GCCONTROLLER_TYPE::EXTENDED;
+    else if (controller.microGamepad)
+      return GCCONTROLLER_TYPE::MICRO;
+    else
+        return GCCONTROLLER_TYPE::NOTFOUND;
 }
 
 - (int)checkOptionalButtons:(int)deviceID
@@ -577,28 +549,19 @@ struct PlayerControllerState
     if (controller.playerIndex != deviceID)
       continue;
 
-    if (controller.extendedGamepad)
-    {
+    if (!controller.extendedGamepad)
+        continue;
       // Check if optional buttons exist on mapped controller
       // button object is nil if button doesn't exist
-#if __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_13_0
-      if (@available(iOS 13.0, tvOS 13.0, *))
+      if (@available(iOS 12.1, *))
       {
-        // ios13 optionally supports both Option and Menu buttons
-        if (controller.extendedGamepad.buttonOptions)
-          ++optionalButtonCount;
+          if (controller.extendedGamepad.leftThumbstickButton)
+              ++optionalButtonCount;
+          if (controller.extendedGamepad.rightThumbstickButton)
+              ++optionalButtonCount;
       }
-#endif
-#if __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_12_1
-      if (@available(iOS 12.1, tvOS 12.1, *))
-      {
-        if (controller.extendedGamepad.leftThumbstickButton)
-          ++optionalButtonCount;
-        if (controller.extendedGamepad.rightThumbstickButton)
-          ++optionalButtonCount;
-      }
-#endif
-    }
+        if ([controller.extendedGamepad respondsToSelector:@selector(buttonOptions)] && [controller.extendedGamepad performSelector:@selector(buttonOptions)] != nil)
+            ++optionalButtonCount;
   }
   return optionalButtonCount;
 }
@@ -618,9 +581,7 @@ struct PlayerControllerState
   auto controllers = [GCController controllers];
   // Iterate through any pre-existing controller connections at startup to enable value handlers
   for (GCController* controller in controllers)
-  {
     [self controllerConnection:controller];
-  }
 
   return self;
 }
