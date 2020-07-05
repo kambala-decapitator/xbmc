@@ -188,7 +188,7 @@ bool CWinSystemIOS::SetFullScreen(bool fullScreen, RESOLUTION_INFO& res, bool bl
   m_bFullScreen = fullScreen;
 
   CLog::Log(LOGNOTICE, "About to switch to %i x %i",m_nWidth, m_nHeight);
-//  SwitchToVideoMode(res.iWidth, res.iHeight, res.fRefreshRate);
+  SwitchToVideoMode(res.iWidth, res.iHeight, res.fRefreshRate);
   CRenderSystemGLES::ResetRenderSystem(res.iWidth, res.iHeight);
 
   return true;

@@ -31,7 +31,7 @@ const CGFloat timeFadeSecs                    = 2.0;
     UIImageView   *xbmcLogoView;
     UILabel       *descriptionLabel;
 
-    _internalWindow = [[UIWindow alloc] initWithFrame:frame];
+//    _internalWindow = [[UIWindow alloc] initWithFrame:frame];
     _touchView = [[UIView alloc] initWithFrame:frame];
     /* Turn on autoresizing for the whole hierarchy*/
     [_touchView setAutoresizesSubviews:YES];
@@ -89,11 +89,11 @@ const CGFloat timeFadeSecs                    = 2.0;
 
     [self createGestureRecognizers];
 
-    [_internalWindow addSubview:[self view]];
-    [_internalWindow setBackgroundColor:[UIColor blackColor]];
-    [_internalWindow setScreen:[UIScreen mainScreen]];
-    [_internalWindow makeKeyAndVisible];
-    [_internalWindow setRootViewController:self];
+//    [_internalWindow addSubview:[self view]];
+//    [_internalWindow setBackgroundColor:[UIColor blackColor]];
+//    [_internalWindow setScreen:[UIScreen mainScreen]];
+//    [_internalWindow makeKeyAndVisible];
+//    [_internalWindow setRootViewController:self];
 
     [self startSleepTimer];//will fade from black too
   }

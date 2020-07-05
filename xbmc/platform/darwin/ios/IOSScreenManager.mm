@@ -141,7 +141,8 @@ static CEvent screenChangeEvent;
     [self setScreen:screenIdx withMode:mode];
     if(activateExternalTouchController)
     {
-      _externalTouchController = [[IOSExternalTouchController alloc] init];
+      _externalTouchController = [IOSExternalTouchController new];
+        UIApplication.sharedApplication.delegate.window.rootViewController = _externalTouchController;
     }
   }];
 }

@@ -127,11 +127,11 @@ public:
 {
   std::unique_ptr<DebugLogSharingPresenter> m_debugLogSharingPresenter;
 }
-- (void)rescheduleNetworkAutoSuspend;
-@end
 
-@interface UIApplication (extended)
--(void) terminateWithSuccess;
+@property (nonatomic, strong, nullable) UIWindow* externalWindow;
+
+- (void)rescheduleNetworkAutoSuspend;
+
 @end
 
 @implementation XBMCController
@@ -589,7 +589,7 @@ public:
 //  self.view.autoresizesSubviews = YES;
 
   m_glView = [[IOSEAGLView alloc] initWithWindow:UIApplication.sharedApplication.keyWindow];
-//  [[IOSScreenManager sharedInstance] setView:m_glView];
+  [[IOSScreenManager sharedInstance] setView:m_glView];
   [m_glView setMultipleTouchEnabled:YES];
     self.view = m_glView;
 
@@ -841,6 +841,18 @@ public:
 //  view.layer.bounds = view.bounds;
 //  m_window.screen = screen;
 //  [view setFrame:m_window.frame];
+    UIWindow* currentWindow;
+    if (screen == UIScreen.mainScreen) {
+        self.externalWindow.hidden = YES;
+        self.externalWindow = nil;
+        currentWindow = UIApplication.sharedApplication.delegate.window;
+    } else {
+        self.externalWindow = [[UIWindow alloc] initWithFrame:screen.bounds];
+        self.externalWindow.screen = screen;
+        currentWindow = self.externalWindow;
+    }
+    currentWindow.rootViewController = self;
+    [currentWindow makeKeyAndVisible];
 }
 //--------------------------------------------------------------
 - (void) remoteControlReceivedWithEvent: (UIEvent *) receivedEvent {
