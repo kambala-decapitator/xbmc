@@ -1,0 +1,18 @@
+CWinSystemIOS()
+InitWindowSystem()
+
+UpdateResolutions() // called inside InitWindowSystem()
+GetScreenResolution(int *, int *, double *, int) // local
+FillInVideoModes(int) // local
+
+// CApplication::InitWindow()
+CreateNewWindow(const std::string &, bool, RESOLUTION_INFO &)
+
+SetFullScreen(bool, RESOLUTION_INFO &, bool)
+SwitchToVideoMode(int, int, double) // local
+UIScreenMode *getModeForResolution(int, int, unsigned int) // local
+
+// same on display switch
+SetFullScreen(bool, RESOLUTION_INFO &, bool)
+SwitchToVideoMode(int, int, double)
+UIScreenMode *getModeForResolution(int, int, unsigned int)
