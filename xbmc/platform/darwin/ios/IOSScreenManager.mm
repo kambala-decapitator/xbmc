@@ -36,7 +36,6 @@ static CEvent screenChangeEvent;
 @synthesize _screenIdx;
 @synthesize _externalScreen;
 @synthesize _glView;
-@synthesize _lastTouchControllerOrientation;
 
 //--------------------------------------------------------------
 - (void) fadeFromBlack:(CGFloat) delaySecs
@@ -125,7 +124,6 @@ static CEvent screenChangeEvent;
 
   if([self willSwitchToInternal:screenIdx] && _externalTouchController != nil)
   {
-    _lastTouchControllerOrientation = [[UIApplication sharedApplication] statusBarOrientation];
     _externalTouchController = nil;
   }
 
@@ -157,7 +155,7 @@ static CEvent screenChangeEvent;
   //if we are about to switch to current screen
   //with current mode - don't do anything
   if(screenIdx == _screenIdx &&
-    mode == (UIScreenMode *)[[[UIScreen screens] objectAtIndex:screenIdx] currentMode])
+    mode == [[[UIScreen screens] objectAtIndex:screenIdx] currentMode])
     return true;
 
   //put the params into a dict
@@ -225,13 +223,13 @@ static CEvent screenChangeEvent;
   }
 }
 //--------------------------------------------------------------
-+ (id) sharedInstance
++ (instancetype)sharedInstance
 {
-	static IOSScreenManager* sharedManager = nil;
-	static dispatch_once_t onceToken;
-	dispatch_once(&onceToken, ^{
-   sharedManager = [[self alloc] init];
-	});
-	return sharedManager;
+	static IOSScreenManager* sharedManager;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        sharedManager = [self new];
+    });
+    return sharedManager;
 }
 @end

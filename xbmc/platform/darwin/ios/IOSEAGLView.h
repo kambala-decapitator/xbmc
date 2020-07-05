@@ -45,7 +45,7 @@
 @property (readonly, getter=getCurrentEAGLContext) EAGLContext *context;
 @property BOOL framebufferResizeRequested;
 
-- (id)initWithFrame:(CGRect)frame withScreen:(UIScreen *)screen;
+- (instancetype)initWithWindow:(UIWindow*)window;
 - (void) pauseAnimation;
 - (void) resumeAnimation;
 - (void) startAnimation;
@@ -53,5 +53,4 @@
 - (void) setFramebuffer;
 - (bool) presentFramebuffer;
 - (void) setScreen:(UIScreen *)screen withFrameBufferResize:(BOOL)resize;
-- (CGFloat) getScreenScale:(UIScreen *)screen;
 @end

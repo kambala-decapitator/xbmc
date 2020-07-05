@@ -20,12 +20,10 @@
   bool _externalScreen;
   IOSEAGLView* __weak _glView;
   IOSExternalTouchController *_externalTouchController;
-  UIInterfaceOrientation _lastTouchControllerOrientation;
 }
 @property (readonly, getter=GetScreenIdx)unsigned int  _screenIdx;
 @property (readonly, getter=isExternalScreen)bool _externalScreen;
 @property(weak, setter=setView:) IOSEAGLView* _glView;
-@property UIInterfaceOrientation _lastTouchControllerOrientation;
 
 // init the screenmanager with our eaglview
 //- (id)      initWithView:(IOSEAGLView *)view;
@@ -42,5 +40,5 @@
 // returns true if switching to screenIdx will change from external to internal screen
 - (bool)    willSwitchToInternal:(unsigned int) screenIdx;
 // singleton access
-+ (id)      sharedInstance;
++ (instancetype)sharedInstance;
 @end

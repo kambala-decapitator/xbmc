@@ -21,6 +21,14 @@ class IDispResource;
 class CVideoSyncIos;
 struct CADisplayLinkWrapper;
 
+#ifdef __OBJC__
+@class UIScreen;
+@class UIScreenMode;
+#else
+typedef void *UIScreen;
+typedef void *UIScreenMode;
+#endif
+
 class CWinSystemIOS : public CWinSystemBase, public CRenderSystemGLES
 {
 public:
@@ -84,8 +92,9 @@ protected:
 
 private:
   bool GetScreenResolution(int* w, int* h, double* fps, int screenIdx);
-  void FillInVideoModes(int screenIdx);
+  void FillInVideoModes(UIScreen* screen);
   bool SwitchToVideoMode(int width, int height, double refreshrate);
+    void UpdateDesktopResolutionFromMode(RESOLUTION_INFO& res, UIScreen* screen, UIScreenMode* mode);
   CADisplayLinkWrapper *m_pDisplayLink;
   int m_internalTouchscreenResolutionWidth = -1;
   int m_internalTouchscreenResolutionHeight = -1;

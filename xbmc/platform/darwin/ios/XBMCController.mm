@@ -139,7 +139,7 @@ public:
 @synthesize lastGesturePoint;
 @synthesize screenScale;
 @synthesize touchBeginSignaled;
-@synthesize m_screenIdx;
+//@synthesize m_screenIdx;
 @synthesize screensize;
 @synthesize m_networkAutoSuspendTimer;
 @synthesize MPNPInfoManager;
@@ -206,11 +206,6 @@ public:
 - (UIInterfaceOrientationMask)supportedInterfaceOrientations
 {
   return UIInterfaceOrientationMaskLandscape;
-}
-//--------------------------------------------------------------
-- (UIInterfaceOrientation) getOrientation
-{
-	return orientation;
 }
 
 -(void)sendKey:(XBMCKey) key
@@ -563,10 +558,9 @@ public:
   }
 }
 //--------------------------------------------------------------
-- (id)initWithFrame:(CGRect)frame withScreen:(UIScreen *)screen
+- (id)init
 {
   PRINT_SIGNATURE();
-  m_screenIdx = 0;
   self = [super init];
   if ( !self )
     return ( nil );
@@ -576,24 +570,13 @@ public:
   m_isPlayingBeforeInactive = NO;
   m_bgTask = UIBackgroundTaskInvalid;
 
-  m_window = [[UIWindow alloc] initWithFrame:frame];
-  [m_window setRootViewController:self];
-  m_window.screen = screen;
-  /* Turn off autoresizing */
-  m_window.autoresizingMask = 0;
-  m_window.autoresizesSubviews = NO;
+//  NSNotificationCenter *center;
+//  center = [NSNotificationCenter defaultCenter];
+//  [center addObserver: self
+//             selector: @selector(observeDefaultCenterStuff:)
+//                 name: nil
+//               object: nil];
 
-  NSNotificationCenter *center;
-  center = [NSNotificationCenter defaultCenter];
-  [center addObserver: self
-             selector: @selector(observeDefaultCenterStuff:)
-                 name: nil
-               object: nil];
-
-  orientation = UIInterfaceOrientationLandscapeLeft;
-
-  [m_window makeKeyAndVisible];
-  g_xbmcController = self;
   MPNPInfoManager = [DarwinEmbedNowPlayingInfoManager new];
 
   return self;
@@ -601,26 +584,27 @@ public:
 //--------------------------------------------------------------
 - (void)loadView
 {
-  [super loadView];
-  self.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-  self.view.autoresizesSubviews = YES;
+//  [super loadView];
+//  self.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+//  self.view.autoresizesSubviews = YES;
 
-  m_glView = [[IOSEAGLView alloc] initWithFrame:self.view.bounds withScreen:UIScreen.mainScreen];
-  [[IOSScreenManager sharedInstance] setView:m_glView];
+  m_glView = [[IOSEAGLView alloc] initWithWindow:UIApplication.sharedApplication.keyWindow];
+//  [[IOSScreenManager sharedInstance] setView:m_glView];
   [m_glView setMultipleTouchEnabled:YES];
+    self.view = m_glView;
 
   /* Check if screen is Retina */
-  screenScale = [m_glView getScreenScale:[UIScreen mainScreen]];
+  screenScale = UIScreen.mainScreen.maxScale;
 
-  [self.view addSubview: m_glView];
+//  [self.view addSubview: m_glView];
 
   [self createGestureRecognizers];
 }
 //--------------------------------------------------------------
--(void)viewDidLoad
-{
-  [super viewDidLoad];
-}
+//-(void)viewDidLoad
+//{
+//  [super viewDidLoad];
+//}
 //--------------------------------------------------------------
 - (void)dealloc
 {
@@ -629,11 +613,6 @@ public:
   [self enableNetworkAutoSuspend:nil];
 
   [m_glView stopAnimation];
-
-  NSNotificationCenter *center;
-  // take us off the default center for our app
-  center = [NSNotificationCenter defaultCenter];
-  [center removeObserver: self];
 }
 //--------------------------------------------------------------
 - (void)viewWillAppear:(BOOL)animated
@@ -659,9 +638,9 @@ public:
   // this should make ios call prefersHomeIndicatorAutoHidden and
   // hide the home indicator on iPhoneX and other devices without
   // home button
-  if ([self respondsToSelector:@selector(setNeedsUpdateOfHomeIndicatorAutoHidden)]) {
-    [self performSelector:@selector(setNeedsUpdateOfHomeIndicatorAutoHidden)];
-  }
+//  if ([self respondsToSelector:@selector(setNeedsUpdateOfHomeIndicatorAutoHidden)]) {
+//    [self performSelector:@selector(setNeedsUpdateOfHomeIndicatorAutoHidden)];
+//  }
 }
 //--------------------------------------------------------------
 - (BOOL)prefersHomeIndicatorAutoHidden
@@ -688,7 +667,7 @@ public:
   // which would be shown whenever this UIResponder
   // becomes the first responder (which is always the case!)
   // caused by implementing the UIKeyInput protocol
-  return [[UIView alloc] initWithFrame:CGRectZero];
+  return [UIView new];
 }
 //--------------------------------------------------------------
 - (BOOL) canBecomeFirstResponder
@@ -696,17 +675,17 @@ public:
   return YES;
 }
 //--------------------------------------------------------------
-- (void)viewDidUnload
-{
-  [[UIApplication sharedApplication] endReceivingRemoteControlEvents];
-  [self resignFirstResponder];
-
-	[super viewDidUnload];
-}
+//- (void)viewDidUnload
+//{
+//  [[UIApplication sharedApplication] endReceivingRemoteControlEvents];
+//  [self resignFirstResponder];
+//
+//    [super viewDidUnload];
+//}
 //--------------------------------------------------------------
 - (CGRect)fullscreenSubviewFrame
 {
-  return UIEdgeInsetsInsetRect(self.view.bounds, m_window.safeAreaInsets);
+  return UIEdgeInsetsInsetRect(self.view.bounds, UIApplication.sharedApplication.keyWindow.safeAreaInsets);
 }
 //--------------------------------------------------------------
 - (void)onXbmcAlive
@@ -728,8 +707,10 @@ public:
 
   // apply safe area to Kodi GUI
   UIEdgeInsets __block insets;
+  UIWindow* __block w;
   auto getInsets = ^{
-    insets = m_window.safeAreaInsets;
+    w = UIApplication.sharedApplication.keyWindow;
+    insets = w.safeAreaInsets;
   };
   if (isMainThread)
     getInsets();
@@ -737,14 +718,13 @@ public:
     dispatch_sync(dispatch_get_main_queue(), getInsets);
 
   CLog::Log(LOGDEBUG, "insets: {}\nwindow: {}\nscreen: {}",
-            NSStringFromUIEdgeInsets(insets).UTF8String, m_window.description.UTF8String,
+            NSStringFromUIEdgeInsets(insets).UTF8String, w.description.UTF8String,
             m_glView.currentScreen.description.UTF8String);
   if (UIEdgeInsetsEqualToEdgeInsets(insets, UIEdgeInsetsZero))
     return;
 
-  auto scale = [m_glView getScreenScale:m_glView.currentScreen];
-  guiInsets = EdgeInsets(insets.left * scale, insets.top * scale, insets.right * scale,
-                         insets.bottom * scale);
+  guiInsets = EdgeInsets(insets.left * screenScale, insets.top * screenScale,
+                         insets.right * screenScale, insets.bottom * screenScale);
 }
 //--------------------------------------------------------------
 - (void) setFramebuffer
@@ -755,6 +735,10 @@ public:
 - (bool) presentFramebuffer
 {
   return [m_glView presentFramebuffer];
+}
+- (void)prepareGL {
+
+    [m_glView performSelector:@selector(prepareGL)];
 }
 //--------------------------------------------------------------
 - (CGSize) getScreenSize
@@ -774,20 +758,6 @@ public:
   }
   screensize = tmp;
   return screensize;
-}
-//--------------------------------------------------------------
-- (BOOL) recreateOnReselect
-{
-  PRINT_SIGNATURE();
-  return YES;
-}
-//--------------------------------------------------------------
-- (void)didReceiveMemoryWarning
-{
-  // Releases the view if it doesn't have a superview.
-  [super didReceiveMemoryWarning];
-
-  // Release any cached data, images, etc. that aren't in use.
 }
 //--------------------------------------------------------------
 - (void)disableNetworkAutoSuspend
@@ -848,29 +818,29 @@ public:
 {
   // Since ios7 we have to handle the orientation manually
   // it differs by 90 degree between internal and external screen
-  float   angle = 0;
-  UIView *view = [m_window.subviews objectAtIndex:0];
-  switch(newOrientation)
-  {
-    case UIInterfaceOrientationUnknown:
-    case UIInterfaceOrientationPortrait:
-      angle = 0;
-      break;
-    case UIInterfaceOrientationPortraitUpsideDown:
-      angle = M_PI;
-      break;
-    case UIInterfaceOrientationLandscapeLeft:
-      angle = -M_PI_2;
-      break;
-    case UIInterfaceOrientationLandscapeRight:
-      angle = M_PI_2;
-      break;
-  }
-  // reset the rotation of the view
-  view.layer.transform = CATransform3DMakeRotation(angle, 0, 0.0, 1.0);
-  view.layer.bounds = view.bounds;
-  m_window.screen = screen;
-  [view setFrame:m_window.frame];
+//  float   angle = 0;
+//  UIView *view = [m_window.subviews objectAtIndex:0];
+//  switch(newOrientation)
+//  {
+//    case UIInterfaceOrientationUnknown:
+//    case UIInterfaceOrientationPortrait:
+//      angle = 0;
+//      break;
+//    case UIInterfaceOrientationPortraitUpsideDown:
+//      angle = M_PI;
+//      break;
+//    case UIInterfaceOrientationLandscapeLeft:
+//      angle = -M_PI_2;
+//      break;
+//    case UIInterfaceOrientationLandscapeRight:
+//      angle = M_PI_2;
+//      break;
+//  }
+//  // reset the rotation of the view
+//  view.layer.transform = CATransform3DMakeRotation(angle, 0, 0.0, 1.0);
+//  view.layer.bounds = view.bounds;
+//  m_window.screen = screen;
+//  [view setFrame:m_window.frame];
 }
 //--------------------------------------------------------------
 - (void) remoteControlReceivedWithEvent: (UIEvent *) receivedEvent {
@@ -1020,6 +990,22 @@ public:
 - (CVEAGLContext)getEAGLContextObj
 {
   return [m_glView getCurrentEAGLContext];
+}
+
+@end
+
+
+@implementation UIScreen (MaxScale)
+
+- (CGFloat)maxScale {
+    static CGFloat scale;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        CLog::Log(LOGDEBUG, "nativeScale {}, scale {}, traitScale {}", self.nativeScale, self.scale,
+                  self.traitCollection.displayScale);
+        scale = std::max({self.nativeScale, self.scale, self.traitCollection.displayScale});
+    });
+    return scale;
 }
 
 @end

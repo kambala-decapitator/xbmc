@@ -20,7 +20,7 @@
 
 @interface XBMCController : UIViewController <UIGestureRecognizerDelegate, UIKeyInput>
 {
-  UIWindow *m_window;
+//  UIWindow *m_window;
   IOSEAGLView  *m_glView;
   int m_screensaverTimeout;
 
@@ -29,9 +29,9 @@
   CGPoint lastGesturePoint;
   CGFloat screenScale;
   bool touchBeginSignaled;
-  int  m_screenIdx;
+//  int  m_screenIdx;
 
-  UIInterfaceOrientation orientation;
+//  UIInterfaceOrientation orientation;
 
   bool m_isPlayingBeforeInactive;
   UIBackgroundTaskIdentifier m_bgTask;
@@ -42,7 +42,7 @@
 @property CGPoint lastGesturePoint;
 @property CGFloat screenScale;
 @property bool touchBeginSignaled;
-@property int  m_screenIdx;
+//@property int  m_screenIdx;
 @property CGSize screensize;
 @property(nonatomic, strong) NSTimer* m_networkAutoSuspendTimer;
 @property(nonatomic, strong) DarwinEmbedNowPlayingInfoManager* MPNPInfoManager;
@@ -64,7 +64,7 @@
 - (void) setFramebuffer;
 - (bool) presentFramebuffer;
 - (CGSize) getScreenSize;
-- (UIInterfaceOrientation) getOrientation;
+//- (UIInterfaceOrientation) getOrientation;
 - (void) createGestureRecognizers;
 - (void) activateKeyboard:(UIView *)view;
 - (void) deactivateKeyboard:(UIView *)view;
@@ -79,8 +79,13 @@
 - (void) enableScreenSaver;
 - (bool) changeScreen: (unsigned int)screenIdx withMode:(UIScreenMode *)mode;
 - (void) activateScreen: (UIScreen *)screen withOrientation:(UIInterfaceOrientation)newOrientation;
-- (id)   initWithFrame:(CGRect)frame withScreen:(UIScreen *)screen;
+//- (id)   initWithFrame:(CGRect)frame withScreen:(UIScreen *)screen;
 - (CVEAGLContext)getEAGLContextObj;
 @end
 
 extern XBMCController *g_xbmcController;
+
+
+@interface UIScreen (MaxScale)
+@property (nonatomic, readonly) CGFloat maxScale;
+@end

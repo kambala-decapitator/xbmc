@@ -88,24 +88,14 @@ using namespace KODI::MESSAGING;
   }
 }
 
-- (CGFloat)getScreenScale:(UIScreen *)screen
-{
-  CLog::Log(LOGDEBUG, "nativeScale {}, scale {}, traitScale {}", screen.nativeScale, screen.scale,
-            screen.traitCollection.displayScale);
-  return std::max({screen.nativeScale, screen.scale, screen.traitCollection.displayScale});
-}
-
 - (void) setScreen:(UIScreen *)screen withFrameBufferResize:(BOOL)resize
 {
-  CGFloat scaleFactor = 1.0;
-  CAEAGLLayer *eaglLayer = (CAEAGLLayer *)[self layer];
+    currentScreen = screen;
 
-  currentScreen = screen;
-  scaleFactor = [self getScreenScale: currentScreen];
+  CGFloat scaleFactor = screen.maxScale;
+    self.layer.contentsScale = scaleFactor;
+    self.contentScaleFactor = scaleFactor;
 
-  //this will activate retina on supported devices
-  [eaglLayer setContentsScale:scaleFactor];
-  [self setContentScaleFactor:scaleFactor];
   if(resize)
   {
     [self resizeFrameBuffer];
@@ -113,17 +103,17 @@ using namespace KODI::MESSAGING;
 }
 
 //--------------------------------------------------------------
-- (id)initWithFrame:(CGRect)frame withScreen:(UIScreen *)screen
+- (instancetype)initWithWindow:(UIWindow*)window
 {
   //PRINT_SIGNATURE();
   framebufferResizeRequested = FALSE;
-  if ((self = [super initWithFrame:frame]))
+  if ((self = [super initWithFrame:window.bounds]))
   {
     // Get the layer
     CAEAGLLayer *eaglLayer = (CAEAGLLayer *)self.layer;
     //set screen, handlescreenscale
     //and set frame size
-    [self setScreen:screen withFrameBufferResize:FALSE];
+    [self setScreen:window.screen withFrameBufferResize:FALSE];
 
     eaglLayer.opaque = TRUE;
     eaglLayer.drawableProperties = [NSDictionary dictionaryWithObjectsAndKeys:
@@ -131,9 +121,12 @@ using namespace KODI::MESSAGING;
       kEAGLColorFormatRGBA8, kEAGLDrawablePropertyColorFormat,
       nil];
 
-    EAGLContext *aContext = [[EAGLContext alloc]
-      initWithAPI:kEAGLRenderingAPIOpenGLES2];
-
+      EAGLContext *aContext = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES3];
+      if (!aContext)
+      {
+          aContext = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
+          NSLog(@"kEAGLRenderingAPIOpenGLES3 fail");
+      }
     if (!aContext)
       ELOG(@"Failed to create ES context");
     else if (![EAGLContext setCurrentContext:aContext])
@@ -142,7 +135,8 @@ using namespace KODI::MESSAGING;
     self.context = aContext;
 
     animating = FALSE;
-    xbmcAlive = FALSE;
+    xbmcAlive = YES;
+      readyToRun = YES;
     pause = FALSE;
     [self setContext:context];
     [self createFramebuffer];
@@ -150,6 +144,32 @@ using namespace KODI::MESSAGING;
   }
 
   return self;
+}
+- (void)prepareGL {
+    // Get the layer
+//    CAEAGLLayer* __block eaglLayer;
+//    dispatch_sync(dispatch_get_main_queue(), ^{
+//        eaglLayer = (CAEAGLLayer*)self.layer;
+//    });
+//
+//    eaglLayer.opaque = TRUE;
+//    eaglLayer.drawableProperties = [NSDictionary dictionaryWithObjectsAndKeys:
+//                                    [NSNumber numberWithBool:NO], kEAGLDrawablePropertyRetainedBacking,
+//                                    kEAGLColorFormatRGBA8, kEAGLDrawablePropertyColorFormat,
+//                                    nil];
+//
+//    EAGLContext *aContext = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES3];
+//    if (!aContext)
+//    {
+//        aContext = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
+//        NSLog(@"kEAGLRenderingAPIOpenGLES3 fail");
+//    }
+//    if (!aContext)
+//        ELOG(@"Failed to create ES context");
+//    else if (![EAGLContext setCurrentContext:aContext])
+//        ELOG(@"Failed to set ES context current");
+//
+//    self.context = aContext;
 }
 
 //--------------------------------------------------------------
@@ -293,37 +313,37 @@ using namespace KODI::MESSAGING;
 - (void) startAnimation
 {
   PRINT_SIGNATURE();
-	if (!animating && context)
-	{
-		animating = TRUE;
-
-    // kick off an animation thread
-    animationThreadLock = [[NSConditionLock alloc] initWithCondition: FALSE];
-    animationThread = [[NSThread alloc] initWithTarget:self
-      selector:@selector(runAnimation:)
-      object:animationThreadLock];
-    [animationThread start];
-	}
+//    if (!animating && context)
+//    {
+//        animating = TRUE;
+//
+//    // kick off an animation thread
+//    animationThreadLock = [[NSConditionLock alloc] initWithCondition: FALSE];
+//    animationThread = [[NSThread alloc] initWithTarget:self
+//      selector:@selector(runAnimation:)
+//      object:animationThreadLock];
+//    [animationThread start];
+//    }
 }
 //--------------------------------------------------------------
 - (void) stopAnimation
 {
   PRINT_SIGNATURE();
-	if (animating && context)
-	{
-		animating = FALSE;
-    xbmcAlive = FALSE;
-    if (!g_application.m_bStop)
-    {
-      CApplicationMessenger::GetInstance().PostMsg(TMSG_QUIT);
-    }
-
-    CAnnounceReceiver::GetInstance()->DeInitialize();
-
-    // wait for animation thread to die
-    if ([animationThread isFinished] == NO)
-      [animationThreadLock lockWhenCondition:TRUE];
-	}
+//    if (animating && context)
+//    {
+//        animating = FALSE;
+//    xbmcAlive = FALSE;
+//    if (!g_application.m_bStop)
+//    {
+//      CApplicationMessenger::GetInstance().PostMsg(TMSG_QUIT);
+//    }
+//
+//    CAnnounceReceiver::GetInstance()->DeInitialize();
+//
+//    // wait for animation thread to die
+//    if ([animationThread isFinished] == NO)
+//      [animationThreadLock lockWhenCondition:TRUE];
+//    }
 }
 //--------------------------------------------------------------
 - (void) runAnimation:(id) arg
