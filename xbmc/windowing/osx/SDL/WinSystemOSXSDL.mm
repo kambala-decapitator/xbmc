@@ -51,7 +51,7 @@
 #import <IOKit/graphics/IOGraphicsLib.h>
 #import <IOKit/pwr_mgt/IOPMLib.h>
 #import <QuartzCore/QuartzCore.h>
-#import <SDL/SDL.h>
+#import <SDL2/SDL.h>
 
 // turn off deprecated warning spew.
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -705,13 +705,12 @@ bool CWinSystemOSX::InitWindowSystem()
     return false;
   }
   // SDL_Init will install a handler for segfaults, restore the default handler.
-  signal(SIGSEGV, SIG_DFL);
-
-  SDL_EnableUNICODE(1);
+  signal(SIGSEGV, SIG_DFL); // TODO
 
   // set repeat to 10ms to ensure repeat time < frame time
   // so that hold times can be reliably detected
-  SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, 10);
+    // https://forums.libsdl.org/viewtopic.php?p=35081
+//  SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, 10);
 
   if (!CWinSystemBase::InitWindowSystem())
     return false;
@@ -777,10 +776,21 @@ bool CWinSystemOSX::CreateNewWindow(const std::string& name, bool fullScreen, RE
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
   // Enable vertical sync to avoid any tearing.
-  SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, 1);
+    // SDL_CreateRenderer() - SDL_RENDERER_PRESENTVSYNC instead of zero for the third parameter; SDL_RENDERER_ACCELERATED - ?
+//  SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, 1);
+    SDL_GL_SetSwapInterval(1);
 
-  m_SDLSurface = SDL_SetVideoMode(m_nWidth, m_nHeight, 0, SDL_OPENGL | SDL_RESIZABLE);
-  if (!m_SDLSurface)
+    m_SDLSurface = SDL_CreateWindow(nullptr,
+                                    SDL_WINDOWPOS_UNDEFINED,
+                                    SDL_WINDOWPOS_UNDEFINED,
+                                    m_nWidth, m_nHeight,
+                                    SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+
+    SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengl"); // before creating renderer
+    m_SDLRenderer = SDL_CreateRenderer(m_SDLSurface, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
+//    SDL_CreateWindowAndRenderer(m_nWidth, m_nHeight, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE, &m_SDLSurface, &m_SDLRenderer);
+    //SDL_SetVideoMode(m_nWidth, m_nHeight, 0, SDL_OPENGL | SDL_RESIZABLE);
+  if (!m_SDLSurface || !m_SDLRenderer)
     return false;
 
   // the context SDL creates isn't full screen compatible, so we create new one
@@ -849,7 +859,7 @@ bool CWinSystemOSX::DestroyWindow()
   return true;
 }
 
-extern "C" void SDL_SetWidthHeight(int w, int h);
+//extern "C" void SDL_SetWidthHeight(int w, int h);
 void ResizeWindowInternal(int newWidth, int newHeight, int newLeft, int newTop, NSView* last_view)
 {
   if (last_view && [last_view window])
@@ -900,7 +910,7 @@ bool CWinSystemOSX::ResizeWindow(int newWidth, int newHeight, int newLeft, int n
   // HACK: resize SDL's view manually so that mouse bounds are correctly updated.
   // there are two parts to this, the internal SDL (current_video->screen) and
   // the cocoa view ( handled in SetFullScreen).
-  SDL_SetWidthHeight(newWidth, newHeight);
+//  SDL_SetWidthHeight(newWidth, newHeight);
 
   [context makeCurrentContext];
 
@@ -1648,7 +1658,9 @@ void CWinSystemOSX::HandlePossibleRefreshrateChange()
     oldRefreshRate = m_refreshRate;
     // send a message so that videoresolution (and refreshrate)
     // is changed
-    CApplicationMessenger::GetInstance().PostMsg(TMSG_VIDEORESIZE, m_SDLSurface->w, m_SDLSurface->h);
+      int w, h;
+      SDL_GetWindowSize(m_SDLSurface, &w, &h);
+    CApplicationMessenger::GetInstance().PostMsg(TMSG_VIDEORESIZE, w, h);
   }
 }
 

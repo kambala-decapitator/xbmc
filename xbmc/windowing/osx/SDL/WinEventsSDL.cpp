@@ -38,7 +38,37 @@ bool CWinEventsOSX::MessagePump()
         if (!g_application.m_bStop)
           CApplicationMessenger::GetInstance().PostMsg(TMSG_QUIT);
         break;
-
+    case SDL_WINDOWEVENT_ENTER: {
+        std::shared_ptr<CAppInboundProtocol> appPort = CServiceBroker::GetAppPort();
+        if (appPort)
+            appPort->SetRenderGUI(true);
+        CServiceBroker::GetWinSystem()->NotifyAppActiveChange(g_application.GetRenderGUI());
+    }
+        break;
+    case SDL_WINDOWEVENT_LEAVE: {
+        std::shared_ptr<CAppInboundProtocol> appPort = CServiceBroker::GetAppPort();
+        if (appPort)
+            appPort->SetRenderGUI(false);
+        CServiceBroker::GetWinSystem()->NotifyAppActiveChange(g_application.GetRenderGUI());
+    }
+        break;
+    case SDL_WINDOWEVENT_FOCUS_GAINED: {
+        g_application.m_AppFocused = true;
+        std::shared_ptr<CAppInboundProtocol> appPort = CServiceBroker::GetAppPort();
+        if (appPort && g_application.m_AppFocused)
+            appPort->SetRenderGUI(g_application.m_AppFocused);
+        CServiceBroker::GetWinSystem()->NotifyAppFocusChange(g_application.m_AppFocused);
+    }
+        break;
+    case SDL_WINDOWEVENT_FOCUS_LOST: {
+        g_application.m_AppFocused = false;
+        std::shared_ptr<CAppInboundProtocol> appPort = CServiceBroker::GetAppPort();
+        if (appPort && g_application.m_AppFocused)
+            appPort->SetRenderGUI(g_application.m_AppFocused);
+        CServiceBroker::GetWinSystem()->NotifyAppFocusChange(g_application.m_AppFocused);
+    }
+        break;
+/*
       case SDL_ACTIVEEVENT:
         //If the window was inconified or restored
         if( event.active.state & SDL_APPACTIVE )
@@ -57,7 +87,7 @@ bool CWinEventsOSX::MessagePump()
           CServiceBroker::GetWinSystem()->NotifyAppFocusChange(g_application.m_AppFocused);
         }
         break;
-
+*/
       case SDL_KEYDOWN:
       {
         // process any platform specific shortcuts before handing off to XBMC
@@ -71,12 +101,12 @@ bool CWinEventsOSX::MessagePump()
         newEvent.type = XBMC_KEYDOWN;
         newEvent.key.keysym.scancode = event.key.keysym.scancode;
         newEvent.key.keysym.sym = (XBMCKey) event.key.keysym.sym;
-        newEvent.key.keysym.unicode = event.key.keysym.unicode;
+//        newEvent.key.keysym.unicode = event.key.keysym.unicode;
 
         // Check if the Windows keys are down because SDL doesn't flag this.
         uint16_t mod = event.key.keysym.mod;
-        uint8_t* keystate = SDL_GetKeyState(NULL);
-        if (keystate[SDLK_LSUPER] || keystate[SDLK_RSUPER])
+        auto keystate = SDL_GetKeyboardState(nullptr); // crash, the key seems reported already
+        if (keystate[SDLK_LGUI] || keystate[SDLK_RGUI])
           mod |= XBMCKMOD_LSUPER;
         newEvent.key.keysym.mod = (XBMCMod) mod;
 
@@ -95,7 +125,7 @@ bool CWinEventsOSX::MessagePump()
         newEvent.key.keysym.scancode = event.key.keysym.scancode;
         newEvent.key.keysym.sym = (XBMCKey) event.key.keysym.sym;
         newEvent.key.keysym.mod =(XBMCMod) event.key.keysym.mod;
-        newEvent.key.keysym.unicode = event.key.keysym.unicode;
+//        newEvent.key.keysym.unicode = event.key.keysym.unicode; // SDL_GetKeyName ?
 
         std::shared_ptr<CAppInboundProtocol> appPort = CServiceBroker::GetAppPort();
         if (appPort)
@@ -133,7 +163,7 @@ bool CWinEventsOSX::MessagePump()
 
       case SDL_MOUSEMOTION:
       {
-        if (0 == (SDL_GetAppState() & SDL_APPMOUSEFOCUS))
+        if (SDL_GetMouseFocus() == nullptr)
         {
           CServiceBroker::GetInputManager().SetMouseActive(false);
           // See CApplication::ProcessSlow() for a description as to why we call Cocoa_HideMouse.
@@ -151,20 +181,20 @@ bool CWinEventsOSX::MessagePump()
           ret |= appPort->OnEvent(newEvent);
         break;
       }
-      case SDL_VIDEORESIZE:
+      case SDL_WINDOWEVENT_RESIZED:
       {
         // Under newer osx versions sdl is so fucked up that it even fires resize events
         // that exceed the screen size (maybe some HiDP incompatibility in old SDL?)
         // ensure to ignore those events because it will mess with windowed size
-        if((event.resize.w > CDisplaySettings::GetInstance().GetResolutionInfo(RES_DESKTOP).iWidth) ||
-           (event.resize.h > CDisplaySettings::GetInstance().GetResolutionInfo(RES_DESKTOP).iHeight))
+        if((event.window.data1 > CDisplaySettings::GetInstance().GetResolutionInfo(RES_DESKTOP).iWidth) ||
+           (event.window.data2 > CDisplaySettings::GetInstance().GetResolutionInfo(RES_DESKTOP).iHeight))
         {
           break;
         }
         XBMC_Event newEvent = {};
         newEvent.type = XBMC_VIDEORESIZE;
-        newEvent.resize.w = event.resize.w;
-        newEvent.resize.h = event.resize.h;
+        newEvent.resize.w = event.window.data1;
+        newEvent.resize.h = event.window.data2;
         std::shared_ptr<CAppInboundProtocol> appPort = CServiceBroker::GetAppPort();
         if (appPort)
           ret |= appPort->OnEvent(newEvent);
@@ -181,7 +211,7 @@ bool CWinEventsOSX::MessagePump()
           ret |= appPort->OnEvent(newEvent);
         break;
       }
-      case SDL_VIDEOEXPOSE:
+      case SDL_RENDER_TARGETS_RESET: // ???
         CServiceBroker::GetGUI()->GetWindowManager().MarkDirty();
         break;
     }
@@ -195,8 +225,8 @@ bool CWinEventsOSX::ProcessOSXShortcuts(SDL_Event& event)
 {
   static bool shift = false, cmd = false;
 
-  cmd   = !!(SDL_GetModState() & (KMOD_LMETA  | KMOD_RMETA ));
-  shift = !!(SDL_GetModState() & (KMOD_LSHIFT | KMOD_RSHIFT));
+  cmd   = (SDL_GetModState() & KMOD_GUI) != 0;
+  shift = (SDL_GetModState() & KMOD_SHIFT) != 0;
 
   if (cmd && event.key.type == SDL_KEYDOWN)
   {
@@ -207,8 +237,8 @@ bool CWinEventsOSX::ProcessOSXShortcuts(SDL_Event& event)
     // character based on the used keyboard layout
     // see http://lists.libsdl.org/pipermail/sdl-libsdl.org/2004-May/043716.html
     bool isControl = (event.key.keysym.mod & KMOD_CTRL) != 0;
-    if (!isControl && !(event.key.keysym.unicode & 0xff80))
-      keysymbol = event.key.keysym.unicode;
+//    if (!isControl && !(event.key.keysym.unicode & 0xff80))
+//      keysymbol = event.key.keysym.unicode;
 
     switch(keysymbol)
     {

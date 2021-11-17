@@ -17,7 +17,10 @@
 #include <string>
 #include <vector>
 
-typedef struct SDL_Surface SDL_Surface;
+//typedef struct SDL_Surface SDL_Surface;
+//typedef struct SDL_Window SDL_Window;
+struct SDL_Window;
+struct SDL_Renderer;
 
 class IDispResource;
 class CWinEventsOSX;
@@ -93,7 +96,8 @@ protected:
   void  StopTextInput();
 
   std::unique_ptr<CWinSystemOSXImpl> m_impl;
-  SDL_Surface* m_SDLSurface;
+    SDL_Window* m_SDLSurface;
+    SDL_Renderer* m_SDLRenderer;
   CWinEventsOSX *m_osx_events;
   bool                         m_obscured;
   std::chrono::time_point<std::chrono::steady_clock> m_obscured_timecheck;

@@ -10,7 +10,7 @@
 
 #include "windowing/WinEvents.h"
 
-#include <SDL/SDL_events.h>
+#include <SDL2/SDL_events.h>
 
 class CWinEventsOSX : public IWinEvents
 {

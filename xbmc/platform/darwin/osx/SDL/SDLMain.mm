@@ -14,7 +14,7 @@
 #import "platform/darwin/osx/XBMCApplication.h"
 #import "platform/darwin/osx/storage/OSXStorageProvider.h"
 
-#import <SDL/SDL.h>
+#import <SDL2/SDL.h>
 #import <sys/param.h> /* for MAXPATHLEN */
 #import <unistd.h>
 
@@ -432,7 +432,7 @@ static void setupWindowMenu(void)
   }
 }
 
-static void keyPress(SDLKey key)
+static void keyPress(SDL_Keycode key)
 {
   SDL_Event event;
   memset(&event, 0, sizeof(event));
@@ -443,6 +443,7 @@ static void keyPress(SDLKey key)
   SDL_PushEvent(&event);
 }
 
+// TODO
 #define VK_SLEEP            0x143
 #define VK_VOLUME_MUTE      0xAD
 #define VK_VOLUME_DOWN      0xAE
@@ -456,52 +457,52 @@ static void keyPress(SDLKey key)
 
 - (void)powerKeyNotification
 {
-  keyPress((SDLKey)VK_SLEEP);
+  keyPress((SDL_Keycode)VK_SLEEP);
 }
 
 - (void)muteKeyNotification
 {
-  keyPress((SDLKey)VK_VOLUME_MUTE);
+  keyPress((SDL_Keycode)VK_VOLUME_MUTE);
 }
 - (void)soundUpKeyNotification
 {
-  keyPress((SDLKey)VK_VOLUME_UP);
+  keyPress((SDL_Keycode)VK_VOLUME_UP);
 }
 - (void)soundDownKeyNotification
 {
-  keyPress((SDLKey)VK_VOLUME_DOWN);
+  keyPress((SDL_Keycode)VK_VOLUME_DOWN);
 }
 
 - (void)playPauseKeyNotification
 {
-  keyPress((SDLKey)VK_MEDIA_PLAY_PAUSE);
+  keyPress((SDL_Keycode)VK_MEDIA_PLAY_PAUSE);
 }
 
 - (void)fastKeyNotification
 {
-  keyPress((SDLKey)VK_FAST_FWD);
+  keyPress((SDL_Keycode)VK_FAST_FWD);
 }
 
 - (void)rewindKeyNotification
 {
-  keyPress((SDLKey)VK_REWIND);
+  keyPress((SDL_Keycode)VK_REWIND);
 }
 
 - (void)nextKeyNotification
 {
-  keyPress((SDLKey)VK_MEDIA_NEXT_TRACK);
+  keyPress((SDL_Keycode)VK_MEDIA_NEXT_TRACK);
 }
 
 - (void)previousKeyNotification
 {
-  keyPress((SDLKey)VK_MEDIA_PREV_TRACK);
+  keyPress((SDL_Keycode)VK_MEDIA_PREV_TRACK);
 }
 
 @end
 
-#ifdef main
-#  undef main
-#endif
+//#ifdef main
+//#  undef main
+//#endif
 /* Main entry point to executable - should *not* be SDL_main! */
 int main(int argc, char *argv[])
 {
@@ -563,7 +564,8 @@ int main(int argc, char *argv[])
 
     // call SDL_main which calls our real main in xbmc.cpp
     // see http://lists.libsdl.org/pipermail/sdl-libsdl.org/2008-September/066542.html
-    int status;
+    int status = 0;
+//      SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
     status = SDL_main(gArgc, gArgv);
     SDL_Quit();
 
