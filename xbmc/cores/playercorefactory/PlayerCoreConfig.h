@@ -19,6 +19,10 @@
 #include "utils/XBMCTinyXML.h"
 #include "utils/log.h"
 
+#if defined(TARGET_DARWIN)
+#include "platform/darwin/AVPlayer/DarwinAVPlayer.h"
+#endif
+
 #include <utility>
 
 class CPlayerCoreConfig
@@ -73,7 +77,11 @@ public:
 
     if (m_type.compare("video") == 0)
     {
-      player = std::make_shared<CVideoPlayer>(callback);
+#if defined(TARGET_DARWIN)
+        player = std::make_shared<DarwinAVPlayer>(callback);
+#else
+        player = std::make_shared<CVideoPlayer>(callback);
+#endif
     }
     else if (m_type.compare("music") == 0)
     {
