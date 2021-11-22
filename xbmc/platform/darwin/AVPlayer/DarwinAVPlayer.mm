@@ -22,13 +22,23 @@
 struct DarwinAVPlayerImpl
 {
     AVQueuePlayer* player;
-    AVPlayerView* view;
     AVPlayerObserver* playerObserver;
+#if defined(TARGET_DARWIN_EMBEDDED)
+    AVPlayerViewController* viewController;
+#else
+    AVPlayerView* view;
+#endif
 
-    DarwinAVPlayerImpl() : player{[AVQueuePlayer new]}, view{[AVPlayerView new]}, playerObserver{[AVPlayerObserver new]}
+    DarwinAVPlayerImpl() : player{[AVQueuePlayer new]}, playerObserver{[AVPlayerObserver new]}
     {
-        view.player = player;
         playerObserver.player = player;
+#if defined(TARGET_DARWIN_EMBEDDED)
+        viewController = [AVPlayerViewController new];
+        viewController.player = player;
+#else
+        view = [AVPlayerView new];
+        view.player = player;
+#endif
     }
 
     void setNewPlayerItem(AVPlayerItem* _Nullable item)
@@ -44,9 +54,15 @@ struct DarwinAVPlayerImpl
 
 DarwinAVPlayer::DarwinAVPlayer(IPlayerCallback& callback) : IPlayer{callback}, m_impl{std::make_unique<DarwinAVPlayerImpl>()}
 {
+#if defined(TARGET_DARWIN_EMBEDDED)
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [UIApplication.sharedApplication.keyWindow.rootViewController presentViewController:m_impl->viewController animated:YES completion:nil];
+    });
+#else
 //    [m_impl->view setFrameSize:NSApp.mainWindow.contentView.bounds.size];
     [m_impl->view setFrameSize:NSMakeSize(1280, 720)];
     [NSApp.windows.lastObject.contentView addSubview:m_impl->view];
+#endif
 }
 
 DarwinAVPlayer::~DarwinAVPlayer() = default;
@@ -55,7 +71,8 @@ bool DarwinAVPlayer::OpenFile(const CFileItem& file, const CPlayerOptions& optio
 {
     const auto filePath = [NSString stringWithUTF8String:file.GetPath().c_str()];
     NSLog(@"%s %@", __PRETTY_FUNCTION__, filePath);
-    const auto playerItem = [AVPlayerItem playerItemWithURL:[NSURL fileURLWithPath:filePath isDirectory:NO]];
+    const auto url = file.IsRemote() ? [NSURL URLWithString:filePath] : [NSURL fileURLWithPath:filePath isDirectory:NO];
+    const auto playerItem = [AVPlayerItem playerItemWithURL:url];
     m_impl->setNewPlayerItem(playerItem);
     return true;
 }
