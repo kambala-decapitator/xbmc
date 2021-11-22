@@ -36,7 +36,8 @@ list(APPEND DEPLIBS "-framework DiskArbitration" "-framework IOKit"
                     "-framework CoreAudio" "-framework AudioToolbox"
                     "-framework CoreGraphics" "-framework CoreMedia"
                     "-framework VideoToolbox" "-framework Security"
-                    "-framework GameController")
+                    "-framework GameController" "-framework AVFoundation"
+                    "-framework AVKit")
 
 if(ARCH STREQUAL aarch64)
   set(CMAKE_OSX_DEPLOYMENT_TARGET 11.0)
