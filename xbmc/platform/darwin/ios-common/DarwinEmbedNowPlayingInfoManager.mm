@@ -137,8 +137,8 @@
                         change:(NSDictionary*)change
                        context:(void*)context
 {
-  if ([keyPath isEqualToString:NSStringFromSelector(@selector(nowPlayingInfo))])
-    [MPNowPlayingInfoCenter defaultCenter].nowPlayingInfo = m_nowPlayingInfo;
+  // if ([keyPath isEqualToString:NSStringFromSelector(@selector(nowPlayingInfo))])
+    // [MPNowPlayingInfoCenter defaultCenter].nowPlayingInfo = m_nowPlayingInfo;
 }
 
 - (instancetype)init
