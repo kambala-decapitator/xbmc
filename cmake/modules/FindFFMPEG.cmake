@@ -162,6 +162,10 @@ macro(buildFFMPEG)
     string(REPLACE ";" "|" ${${CMAKE_FIND_PACKAGE_NAME}_MODULE}_MODULE_PATH "${CMAKE_MODULE_PATH}")
     set(${${CMAKE_FIND_PACKAGE_NAME}_MODULE}_LIST_SEPARATOR LIST_SEPARATOR |)
 
+    if(XCODE)
+      set(extra_env_vars "SDKROOT=")
+    endif()
+
     set(CMAKE_ARGS -DCMAKE_MODULE_PATH=${FFMPEG_MODULE_PATH}
                    -DFFMPEG_VER=${FFMPEG_VER}
                    -DCORE_SYSTEM_NAME=${CORE_SYSTEM_NAME}
@@ -175,6 +179,7 @@ macro(buildFFMPEG)
                    -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
                    -DCMAKE_EXE_LINKER_FLAGS=${LINKER_FLAGS}
                    -DDISABLE_FFMPEG_SOURCE_PLUGINS=${DISABLE_FFMPEG_SOURCE_PLUGINS}
+                   -DEXTRA_ENV_VARS=${extra_env_vars}
                    ${CROSS_ARGS}
                    ${FFMPEG_OPTIONS}
                    -DPKG_CONFIG_PATH=${CMAKE_BINARY_DIR}/${CORE_BUILD_DIR}/lib/pkgconfig)
@@ -192,10 +197,6 @@ macro(buildFFMPEG)
                                 <SOURCE_DIR>)
 
       set(postproc_pkg_config_search "postproc=`PKG_CONFIG_PATH=${DEPENDS_PATH}/lib/pkgconfig ${PKG_CONFIG_EXECUTABLE} --libs --static libpostproc`")
-    endif()
-
-    if(CMAKE_GENERATOR STREQUAL Xcode)
-      set(${${CMAKE_FIND_PACKAGE_NAME}_MODULE}_GENERATOR CMAKE_GENERATOR "Unix Makefiles")
     endif()
 
     BUILD_DEP_TARGET()
