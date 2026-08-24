@@ -26,7 +26,7 @@ TARGET_FRAMEWORKS=$TARGET_BUILD_DIR/$FRAMEWORKS_FOLDER_PATH
 BUNDLE_REVISION=$(date -u +%y%m%d.%H%M)
 
 # ios/tvos use different framework plists
-if [ "${PLATFORM_NAME}" == "appletvos" ]; then
+if [ "${PLATFORM_NAME}" == "appletvos" ]; then #
   SEEDFRAMEWORKPLIST="${SRCROOT}/xbmc/platform/darwin/tvos/FrameworkSeed_Info.plist"
 # todo: implement soft frameworks for ios
 #elif [ "$PLATFORM_NAME" == "iphoneos" ]; then

@@ -26,9 +26,11 @@
 	<string>9.0</string>
 	<key>CFBundleSupportedPlatforms</key>
 	<array>
+<!--PLATFORM_DIR=/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform -->
 	<string>AppleTVOS</string>
 	</array>
 	<key>UIDeviceFamily</key>
+<!--TARGETED_DEVICE_FAMILY=1,2 -->
 	<array>
 	<integer>3</integer>
 	</array></dict>

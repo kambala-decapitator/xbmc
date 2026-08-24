@@ -645,7 +645,7 @@ std::string CAddon::LibPath() const
     if (libName.empty())
       return "";
   }
-  return URIUtils::AddFileToFolder(m_addonInfo->Path(), libName);
+  return URIUtils::AddFileToFolder(m_addonInfo->Path(), libName); //
 }
 
 CAddonVersion CAddon::GetDependencyVersion(const std::string& dependencyID) const

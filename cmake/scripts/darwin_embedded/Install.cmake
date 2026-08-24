@@ -100,10 +100,6 @@ endif()
 unset(_addons)
 
 add_custom_command(TARGET ${APP_NAME_LC} POST_BUILD
-    # TODO: Remove in sync with CopyRootFiles-darwin_embedded expecting the ".bin" file
-    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${APP_NAME_LC}>
-                                     $<TARGET_FILE_DIR:${APP_NAME_LC}>/${APP_NAME}.bin
-
     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/${CORE_BUILD_DIR}/DllPaths_generated.h
                                      ${CMAKE_BINARY_DIR}/xbmc/DllPaths_generated.h
     COMMAND "ACTION=build"

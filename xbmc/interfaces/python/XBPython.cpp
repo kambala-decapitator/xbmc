@@ -47,20 +47,18 @@ XBPython::XBPython()
   // Info about interesting python envvars available
   // at http://docs.python.org/using/cmdline.html#environment-variables
 
-#if !defined(TARGET_WINDOWS) && !defined(TARGET_ANDROID)
   // check if we are running as real xbmc.app or just binary
   if (!CUtil::GetFrameworksPath(true).empty())
   {
     // using external python, its build looking for xxx/lib/python3.8
     // so point it to frameworks which is where python3.8 is located
-    setenv("PYTHONHOME", CSpecialProtocol::TranslatePath("special://frameworks").c_str(), 1);
-    setenv("PYTHONPATH", CSpecialProtocol::TranslatePath("special://frameworks").c_str(), 1);
-    CLog::Log(LOGDEBUG, "PYTHONHOME -> {}",
-              CSpecialProtocol::TranslatePath("special://frameworks"));
-    CLog::Log(LOGDEBUG, "PYTHONPATH -> {}",
-              CSpecialProtocol::TranslatePath("special://frameworks"));
+      const auto pythonRootPath = CSpecialProtocol::TranslatePath("special://frameworks");
+    setenv("PYTHONHOME", pythonRootPath.c_str(), 1);
+    setenv("PYTHONPATH", pythonRootPath.c_str(), 1);
+    CLog::Log(LOGDEBUG, "PYTHONHOME -> {}", pythonRootPath);
+    CLog::Log(LOGDEBUG, "PYTHONPATH -> {}", pythonRootPath);
   }
-#endif
+  //
 
   // *::GlobalInitializeModules() functions call PyImport_ExtendInittab(). PyImport_ExtendInittab() should
   // be called before Py_Initialize() as required by the Python documentation.

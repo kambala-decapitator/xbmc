@@ -8,8 +8,14 @@
 
 #include "SoLoader.h"
 
+//#include "CompileInfo.h"
 #include "filesystem/SpecialProtocol.h"
+#include "utils/URIUtils.h"
 #include "utils/log.h"
+
+#if defined(TARGET_DARWIN_EMBEDDED)
+#include "platform/darwin/DarwinUtils.h"
+#endif
 
 #include <dlfcn.h>
 
@@ -39,13 +45,26 @@ bool SoLoader::Load()
   }
   else
   {
-    CLog::Log(LOGDEBUG, "Loading: {}", strFileName);
-    int flags = RTLD_LAZY;
-    m_soHandle = dlopen(strFileName.c_str(), flags);
-    if (!m_soHandle)
+    if (!PerformLoad(strFileName))
     {
-      CLog::Log(LOGERROR, "Unable to load {}, reason: {}", strFileName, dlerror());
+#if defined(TARGET_DARWIN_EMBEDDED)
+      // AppStore requires all dylibs to be in .app/Frameworks in framework format, search there as well
+      //        const auto dylibExtension = CCompileInfo::CCompileInfo::GetSharedLibrarySuffix();
+      //        auto stem = URIUtils::GetFileName(strFileName);
+      //        if (stem.ends_with(dylibExtension))
+      //            stem.resize(stem.size() - dylibExtension.size());
+      auto stem = URIUtils::GetFileName(strFileName);
+      URIUtils::RemoveExtension(stem);
+
+      // technically correct way to find binary in a framework is to read CFBundleExecutable from Info.plist
+      // but since we package dylibs into frameworks ourselves, we already know the layout
+      const auto frameworkBinary = URIUtils::AddFileToFolder(CDarwinUtils::GetFrameworkPath(false),
+                                                             stem + ".framework", stem);
+      if (!PerformLoad(frameworkBinary))
+        return false;
+#else
       return false;
+#endif
     }
   }
   m_bLoaded = true;
@@ -54,7 +73,6 @@ bool SoLoader::Load()
 
 void SoLoader::Unload()
 {
-
   if (m_soHandle)
   {
     if (dlclose(m_soHandle) != 0)
@@ -98,4 +116,14 @@ HMODULE SoLoader::GetHModule()
 bool SoLoader::HasSymbols()
 {
   return false;
+}
+
+bool SoLoader::PerformLoad(const std::string& libPath)
+{
+  CLog::Log(LOGDEBUG, "Loading: {}", libPath);
+  const int flags = RTLD_LAZY;
+  m_soHandle = dlopen(libPath.c_str(), flags);
+  if (m_soHandle == nullptr)
+    CLog::Log(LOGERROR, "Unable to load {}, reason: {}", libPath, dlerror());
+  return m_soHandle != nullptr;
 }

@@ -2,6 +2,15 @@
 
 set -ux
 
+EXTERNAL_LIBS="$XBMC_DEPENDS"
+
+TARGET_BINARY="$TARGET_BUILD_DIR/$EXECUTABLE_PATH"
+TARGET_CONTENTS="$TARGET_BUILD_DIR/$FULL_PRODUCT_NAME"
+TARGET_FRAMEWORKS="$TARGET_BUILD_DIR/$FRAMEWORKS_FOLDER_PATH"
+
+DYLIB_NAMEPATH="@executable_path/Frameworks"
+XBMC_HOME="$TARGET_CONTENTS/AppData/AppHome"
+
 function check_dyloaded_depends
 {
   b=$(find "$EXTERNAL_LIBS" -name $1 -print)
@@ -47,15 +56,6 @@ function check_xbmc_dylib_depends
   done
 }
 
-EXTERNAL_LIBS=$XBMC_DEPENDS
-
-TARGET_BINARY=$TARGET_BUILD_DIR/$EXECUTABLE_PATH
-TARGET_CONTENTS=$TARGET_BUILD_DIR/$FULL_PRODUCT_NAME
-TARGET_FRAMEWORKS=$TARGET_BUILD_DIR/$FRAMEWORKS_FOLDER_PATH
-
-DYLIB_NAMEPATH=@executable_path/Frameworks
-XBMC_HOME=$TARGET_CONTENTS/AppData/AppHome
-
 mkdir -p "$TARGET_CONTENTS"
 mkdir -p "$TARGET_CONTENTS/AppData/AppHome"
 # start clean so we don't keep old dylibs
@@ -66,7 +66,7 @@ echo "Package $FULL_PRODUCT_NAME"
 
 # Copy all of XBMC's dylib dependencies and rename their locations to inside the Framework
 echo "Checking $FULL_PRODUCT_NAME for dylib dependencies"
-for a in $(otool -L "$TARGET_BINARY"  | grep "$EXTERNAL_LIBS\|$DYLIB_NAMEPATH" | awk ' { print $1 } ') ; do
+for a in $(otool -L "$TARGET_BINARY" | grep -F -e "$EXTERNAL_LIBS" -e "$DYLIB_NAMEPATH" | awk ' { print $1 } ') ; do
   echo "    Packaging $a"
   # Soft Frameworks strip dylib from path. Explicitly add dylib
   if ! [ -f "$EXTERNAL_LIBS/lib/$(basename $a)" ]; then
@@ -79,14 +79,20 @@ for a in $(otool -L "$TARGET_BINARY"  | grep "$EXTERNAL_LIBS\|$DYLIB_NAMEPATH" |
   install_name_tool -change "$a" "$DYLIB_NAMEPATH/$DYLIBNAME" "$TARGET_BINARY"
 done
 
-echo "Package $EXTERNAL_LIBS/lib/python$PYTHON_VERSION"
-mkdir -p "$TARGET_FRAMEWORKS/lib"
+
+pythonDir="python$PYTHON_VERSION"
+pythonSrc="$EXTERNAL_LIBS/lib/$pythonDir"
+pythonDst="$TARGET_CONTENTS/lib/$pythonDir"
+
+echo "Package $pythonSrc"
+rm -rf "$pythonDst"
+mkdir -p "$pythonDst"
 PYTHONSYNC="rsync -aq --exclude .DS_Store --exclude *.a --exclude *.exe --exclude test --exclude tests"
-${PYTHONSYNC} "$EXTERNAL_LIBS/lib/python$PYTHON_VERSION" "$TARGET_FRAMEWORKS/lib/"
-rm -rf "$TARGET_FRAMEWORKS/lib/python$PYTHON_VERSION/config"
+${PYTHONSYNC} "$pythonSrc" "$pythonDst"
+rm -rf "$pythonDst/config"
 
 echo "Checking python *.so for dylib dependencies"
-check_xbmc_dylib_depends "$TARGET_FRAMEWORKS"/lib/python$PYTHON_VERSION "*.so"
+check_xbmc_dylib_depends "$pythonDst" "*.so"
 
 echo "Checking system *.so for dylib dependencies"
 check_xbmc_dylib_depends "$XBMC_HOME"/system "*.so"
@@ -95,6 +101,6 @@ echo "Checking addons *.so for dylib dependencies"
 check_xbmc_dylib_depends "$XBMC_HOME"/addons "*.so"
 
 echo "Checking xbmc/DllPaths_generated.h for dylib dependencies"
-for a in $(grep .so "$BUILD_ROOT"/xbmc/DllPaths_generated.h | awk '{print $3}' | sed s/\"//g) ; do
+for a in $(grep -F .so "$BUILD_ROOT"/xbmc/DllPaths_generated.h | awk '{print $3}' | sed s/\"//g) ; do
   check_dyloaded_depends $a
 done
